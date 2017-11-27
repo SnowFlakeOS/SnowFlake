@@ -1,9 +1,9 @@
 # SnowFlake
-SnowFlake, this is an Operating System and is written in Swift.
+SnowFlake, this is an Operating System and is written in Rust.
 
 # Building
 This is SnowFlake is require for build.
-- Swift (>= 4) (https://swift.org)
+- Rust (https://www.rust-lang.org)
 - NASM (http://www.nasm.us/)
 - GCC Toolchain or GCC (https://gcc.gnu.org/)
 - Clang (https://clang.llvm.org/)
@@ -40,3 +40,4 @@ I will add later
 - https://github.com/klange/taylor
 - https://github.com/charliesome/mini64
 - https://github.com/apple/swift
+- https://github.com/phil-opp/blog_os
