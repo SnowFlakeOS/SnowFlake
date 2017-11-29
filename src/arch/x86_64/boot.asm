@@ -26,6 +26,17 @@ start:
     int 0x15
     mov si, could_not_enable_a20
     jc error_bios
+    ; get video mode information
+    mov ax, 0x4F01
+    mov cx, 0x117
+    mov bx, 0x07E0
+    mov es, bx
+    mov di, 0x00
+    int 0x10
+    ; set video mode
+    mov ax, 0x4F02
+    mov bx, 0x4117
+    int 0x10
     ; read memory map
     mov di, memory_map
     xor ebx, ebx
