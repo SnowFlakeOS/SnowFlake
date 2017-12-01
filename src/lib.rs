@@ -10,6 +10,8 @@ pub mod vbe;
 
 pub use vbe::load;
 
+pub use core::ptr;
+
 extern crate volatile;
 extern crate spin;
 
@@ -21,7 +23,15 @@ pub extern fn init()
     let vbe_info = unsafe{ vbe::load(0x7E00) };
 
     if vbe_info.x_res() == 1024 {
-        let hello = b"Hello World!";
+        let buff = (0xffffff0000000000 + vbe_info.physbase()) as *mut _;
+
+        for y_num in 0..vbe_info.y_res() {
+            for x_num in 0..vbe_info.x_res() {
+                unsafe { ptr::write(buff.offset(((y_num * vbe_info.x_res()) + x_num) as isize), (0)); };
+            }
+        }
+
+        /* let hello = b"Hello World!";
         let color_byte = 0x1f; // white foreground, blue background
 
         let mut hello_colored = [color_byte; 24];
@@ -31,7 +41,7 @@ pub extern fn init()
 
         // write `Hello World!` to the center of the VGA text buffer
         let buffer_ptr = (0xb8000 + 1988) as *mut _;
-        unsafe { *buffer_ptr = hello_colored };
+        unsafe { *buffer_ptr = hello_colored }; */
     }
 
     loop{}

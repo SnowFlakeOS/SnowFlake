@@ -68,4 +68,8 @@ impl VbeModeInfo
 	pub fn y_res(&self) -> u16 {
 		self.y_res
 	}
+
+	pub fn physbase(&self) -> u32 {
+		self.physbase
+	}
 }
