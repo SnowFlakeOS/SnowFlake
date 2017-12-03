@@ -1,21 +1,26 @@
 #![feature(lang_items)]
 #![feature(const_fn, unique)]
 #![feature(const_unique_new)]
+#![feature(asm)]
 #![no_std]
 
 extern crate rlibc;
 
 #[macro_use]
 pub mod vga_buffer;
-
 pub mod vbe;
 
-pub use vbe::load;
+#[path="arch/x86_64/x86_io.rs"]
+pub mod x86_io;
 
+pub use vbe::load;
 pub use core::ptr;
+pub use x86_io::inb;
+pub use x86_io::outb;
 
 extern crate volatile;
 extern crate spin;
+
 
 #[no_mangle]
 pub extern fn init()
@@ -33,7 +38,12 @@ pub extern fn init()
         println!("Video memory address is 0x{:x}", vbe_info.physbaseptr);
     }
 
-    loop{}
+    loop {
+        if (unsafe{inb(0x60)} & 0x01) == 1 {
+            let scancode = unsafe { inb(0x60) };
+            println!("Scancode is {}", scancode);
+        }
+    }
 }
 
 #[lang = "eh_personality"] extern fn eh_personality() {}
