@@ -42,7 +42,7 @@ bits 16
 org 0
 
 ; Produce a map file containing all symbols and sections.
-[map all ../build/boot/boot.map]
+[map all build/arch/x86_64/boot/boot.map]
 
 ; Include constants, structures, and macros.
 %include "src/arch/x86_64/boot/include/mem.inc"          ; Memory layout constants

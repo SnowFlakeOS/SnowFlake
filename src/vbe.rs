@@ -6,70 +6,51 @@
 //!
 //! Parsing and exposure of the bootloader-provided data
 
-pub unsafe fn load(vbe_addr: usize) -> &'static VbeModeInfo  {
-    let vbe_info = VbeModeInfo::from_raw_parts(vbe_addr);
+pub unsafe fn load(vbe_addr: usize) -> &'static VBEModeInfo  {
+    let vbe_info = VBEModeInfo::from_raw_parts(vbe_addr);
     vbe_info
 }
 
-#[repr(C)]
-#[allow(unused)]
-#[derive(Debug)]
-pub struct VbeModeInfo {
-	attributes: u16,
-	window_attrs: [u8; 2],
-	granuality: u16,
-	window_size: u16,
-	window_segments: [u16; 2],
-	win_pos_fcn_fptr: [u16; 2],	// Pointer to INT 10h, AX=4F05h
-	
-	pitch: u16,
-	x_res: u16, y_res: u16,
-	char_w: u8, char_h: u8,
-	n_planes: u8,
-	bpp: u8,
-	n_banks: u8,
-	memory_model: u8,
-	bank_size: u8,
-	n_pages: u8,
-	_resvd: u8,	// reserved
-	
-	// VBE 1.2+
-	red_mask: u8,	red_position: u8,
-	green_mask: u8, green_position: u8,
-	blue_mask: u8,  blue_position: u8,
-	rsv_mask: u8,   rsv_position: u8,
-	directcolor_attributes: u8,
-
-	// VBE v2.0+
-	physbase: u32,
-	offscreen_ptr: u32,	// Start of offscreen memory
-	offscreen_size_kb: u16,	// Size of offscreen memory
-	
-	// -- VBE v3.0
-	lfb_pitch: u16,
-	image_count_banked: u8,
-	image_count_lfb: u8,
+#[derive(Copy, Clone, Default, Debug)]
+#[repr(packed)]
+pub struct VBEModeInfo {
+    attributes: u16,
+    win_a: u8,
+    win_b: u8,
+    granularity: u16,
+    winsize: u16,
+    segment_a: u16,
+    segment_b: u16,
+    winfuncptr: u32,
+    bytesperscanline: u16,
+    pub xresolution: u16,
+    pub yresolution: u16,
+    xcharsize: u8,
+    ycharsize: u8,
+    numberofplanes: u8,
+    bitsperpixel: u8,
+    numberofbanks: u8,
+    memorymodel: u8,
+    banksize: u8,
+    numberofimagepages: u8,
+    unused: u8,
+    redmasksize: u8,
+    redfieldposition: u8,
+    greenmasksize: u8,
+    greenfieldposition: u8,
+    bluemasksize: u8,
+    bluefieldposition: u8,
+    rsvdmasksize: u8,
+    rsvdfieldposition: u8,
+    directcolormodeinfo: u8,
+    pub physbaseptr: u32,
+    offscreenmemoryoffset: u32,
+    offscreenmemsize: u16,
 }
 
-impl VbeModeInfo 
+impl VBEModeInfo 
 {
-    unsafe fn from_raw_parts(vbe_addr: usize) -> &'static VbeModeInfo {
-        &*(vbe_addr as *const VbeModeInfo)
+    unsafe fn from_raw_parts(vbe_addr: usize) -> &'static VBEModeInfo {
+        &*(vbe_addr as *const VBEModeInfo)
     }
-
-	pub fn pitch(&self) -> u16 {
-		self.pitch
-	}
-
-	pub fn x_res(&self) -> u16 {
-		self.x_res
-	}
-
-	pub fn y_res(&self) -> u16 {
-		self.y_res
-	}
-
-	pub fn physbase(&self) -> u32 {
-		self.physbase
-	}
 }

@@ -27,7 +27,7 @@ bits 16
 org 0x8000
 
 ; Produce a map file containing all symbols and sections.
-[map all ../build/boot/loader.map]
+[map all build/arch/x86_64/boot/loader.map]
 
 ; Include constants, structures, and macros.
 %include "src/arch/x86_64/boot/include/mem.inc"          ; Memory layout constants
@@ -35,7 +35,6 @@ org 0x8000
 %include "src/arch/x86_64/boot/include/bios.inc"         ; BIOS structures
 %include "src/arch/x86_64/boot/include/iso9660.inc"      ; ISO9660 structures
 %include "src/arch/x86_64/boot/include/gdt.inc"          ; Global descriptor table structures
-
 
 ;=============================================================================
 ; load
@@ -79,6 +78,22 @@ org 0x8000
 ;
 ;=============================================================================
 load:
+    ; Get VBE Info
+    mov ax, 0x4F01      ; VBE 기능 번호 0x4F01를 AX 레지스터에 저장
+    mov cx, 0x117       ; 1024x768 해상도에 16비트(R(5):G(6):B(5)) 색 모드 지정
+    mov bx, 0x07E0      ; BX 레지스터에 0x07E0를 저장
+    mov es, bx          ; ES 세그먼트 레지스터에 BX의 값을 설정하고, DI 레지스터에 
+    mov di, 0x00        ; 0x00을 설정하여 0x07E0:0000(0x7E00) 어드레스에 모드 정보
+                        ; 블록을 저장
+    int 0x10            ; 인터럽트 서비스 수행
+
+    ; Enable VBE Mode
+    ;mov ax, 0x4F02      ; VBE 기능 번호 0x4F02를 AX 레지스터에 저장
+    ;mov bx, 0x4117      ; 1024x768 해상도에 16비트(R(5):G(6):B(5)) 색을 사용하는 
+                        ; 선형 프레임 버퍼 모드 지정
+                        ; VBE 모드 번호(Bit 0~8) = 0x117, 
+                        ; 버퍼 모드(비트 14) = 1(선형 프레임 버퍼 모드)
+    ;int 0x10            ; 인터럽트 서비스 수행
 
     .init:
 
@@ -1476,7 +1491,7 @@ String.Error.KernelLoadFailed db "Kernel load failed",      0
 ; Filename strings
 ;-----------------------------------------------------------------------------
 
-Kernel.Filename         db      "KERNEL.sys;1"
+Kernel.Filename         db      "KERNEL.SYS;1"
 Kernel.Filename.Length  equ     ($ - Kernel.Filename)
 
 ;-----------------------------------------------------------------------------

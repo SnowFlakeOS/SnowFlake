@@ -12,11 +12,11 @@ entry_source_file := src/arch/$(arch)/entry.asm
 
 libc_source_files := $(shell find src/libc -name "*.c")
 libc_object_files := $(patsubst src/libc/%.c, \
-    build/libc/%.o, $(c_source_files))
+    build/libc/%.o, $(libc_source_files))
 
 boot_asm_source_files := $(shell find src/arch/$(arch)/boot -name "*.asm")
 boot_asm_object_files := $(patsubst src/arch/$(arch)/boot/%.asm, \
-    build/arch/$(arch)/boot/%.bin, $(boot_asm_source_files))
+    build/arch/$(arch)/boot/%.sys, $(boot_asm_source_files))
 
 CARGO = cargo
 
@@ -45,25 +45,25 @@ iso: $(iso)
 $(iso): $(boot_asm_object_files) $(kernel)
 	@mkdir -p build/iso
 	@mkdir -p build/iso/boot
-	@cp build/arch/$(arch)/boot/boot.bin build/iso/boot/boot.bin # Stage 1
-	@cp build/arch/$(arch)/boot/loader.bin build/iso/boot/loader.bin # Stage 2
-	@cp $(kernel) build/iso/kernel.bin
-	@$(STRIP) build/iso/kernel.bin
-	@genisoimage -R -J -c boot/bootcat -b boot/boot.bin -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
+	@cp build/arch/$(arch)/boot/boot.sys build/iso/boot/boot.sys # Stage 1
+	@cp build/arch/$(arch)/boot/loader.sys build/iso/loader.sys # Stage 2
+	@cp $(kernel) build/iso/kernel.sys
+	@$(STRIP) build/iso/kernel.sys
+	@mkisofs -R -J -c boot/bootcat -b boot/boot.sys -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
 
 $(entry):
 	@mkdir -p $(shell dirname $@)
 	@$(NASM) -f elf64 $(entry_source_file) -o $(entry)
 
 $(kernel): $(entry) cargo $(rust_os) $(libc_object_files) $(linker_script)
-	@$(LD) -n --gc-sections -T $(linker_script) -o $(kernel) $(entry) $(libc_object_files) $(rust_os)
+	@$(LD) -n --gc-sections -T $(linker_script) -o $(kernel) $(entry) $(libc_object_files) $(rust_os) -z max-page-size=0x1000
 
 # compile kernel files
 cargo:
 	@xargo build --target $(target)
 
 # compile libc files
-build/arch/$(arch)/boot/%.bin: src/arch/$(arch)/boot/%.asm
+build/arch/$(arch)/boot/%.sys: src/arch/$(arch)/boot/%.asm
 	@mkdir -p $(shell dirname $@)
 	@$(NASM) -f bin $< -o $@
 
