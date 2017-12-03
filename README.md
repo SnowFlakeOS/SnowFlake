@@ -1,5 +1,5 @@
 # SnowFlake
-SnowFlake, this is an Operating System and is written in Rust.
+SnowFlake, this is an Operating System written in Rust.
 
 # Building
 This is SnowFlake is require for build.
@@ -9,10 +9,10 @@ This is SnowFlake is require for build.
 - Clang (https://clang.llvm.org/)
 
 ## On Windows
-I will add later
+Will be added later
 
 ## On Mac
-macOS is default ld is bsd ld (can not link SnowFlake)\
+macOS is default ld is bsd ld (cannot link SnowFlake)\
 and default as is clang too (build error)\
 If you want build SnowFlake on macOS\
 - Need HomeBrew (https://brew.sh/)
@@ -32,9 +32,9 @@ $ make run
 
 ## On Linux
 ### Fedora
-I will add later
+Will be added later
 
-# Thanks for
+# Thanks to
 - https://stackoverflow.com/questions/27051471/call-c-kernel-from-assembly-bootloader/33263223#33263223
 - https://github.com/rzhikharevich/swift-bare-bones
 - https://github.com/klange/taylor
