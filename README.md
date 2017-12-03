@@ -42,3 +42,4 @@ Will be added later
 - https://github.com/apple/swift
 - https://github.com/phil-opp/blog_os
 - https://github.com/beevik/MonkOS
+- https://github.com/thepowersgang/rust_os
