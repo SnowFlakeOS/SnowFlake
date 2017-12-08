@@ -4,7 +4,7 @@ entry := build/entry-$(arch).elf
 kernel := build/kernel-$(arch).elf
 iso := build/os-$(arch).iso
 
-rust_os := target/$(target)/debug/libsnowflake.a
+rust_os := target/$(target)/debug/libSnowFlake.a
 
 linker_script := src/arch/$(arch)/linker.ld
 
@@ -38,13 +38,14 @@ clean:
 	@rm -r build target
 
 run: $(iso)
-	@qemu-system-x86_64 -cdrom $(iso)
+	@qemu-system-x86_64 -m 256M -cdrom $(iso)
 
 iso: $(iso)
 
 $(iso): $(boot_asm_object_files) $(kernel)
 	@mkdir -p build/iso
 	@mkdir -p build/iso/boot
+	@mkdir -p build/iso/efi/boot
 	@cp build/arch/$(arch)/boot/boot.sys build/iso/boot/boot.sys # Stage 1
 	@cp build/arch/$(arch)/boot/loader.sys build/iso/loader.sys # Stage 2
 	@cp $(kernel) build/iso/kernel.sys

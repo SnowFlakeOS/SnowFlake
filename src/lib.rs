@@ -38,6 +38,19 @@ pub extern fn init()
         println!("Video memory address is 0x{:x}", vbe_info.physbaseptr);
     }
 
+    let total;
+    let lowmem;
+    let  highmem;
+
+    unsafe { outb(0x70, 0x30) };
+    lowmem = unsafe { inb(0x71) };
+    unsafe { outb(0x70, 0x31) };
+    highmem = unsafe { inb(0x71) };
+
+    total = ((lowmem | highmem) as isize) << 8;
+
+    println!("Delected memory is {} KB", total);
+
     loop {
         if (unsafe{inb(0x60)} & 0x01) == 1 {
             let scancode = unsafe { inb(0x60) };
