@@ -21,7 +21,7 @@ boot_asm_object_files := $(patsubst src/arch/$(arch)/boot/%.asm, \
 CARGO = cargo
 
 CC = clang
-CFLAGS = -target x86_64-pc-linux-gnu -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -nostdlib -Isrc/include/libc
+CFLAGS = -target $(arch)-pc-linux-gnu -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -nostdlib -Isrc/include/libc
 
 NASM = nasm
 
@@ -61,7 +61,7 @@ $(kernel): $(entry) cargo $(rust_os) $(libc_object_files) $(linker_script)
 
 # compile kernel files
 cargo:
-	@xargo build --target $(target)
+	xargo build --target $(target)
 
 # compile libc files
 build/arch/$(arch)/boot/%.sys: src/arch/$(arch)/boot/%.asm
