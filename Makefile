@@ -2,7 +2,8 @@ arch ?= x86_64
 target ?= $(arch)-snowflake
 entry := build/entry-$(arch).elf
 kernel := build/kernel-$(arch).elf
-iso := build/os-$(arch).iso
+iso := build/snowflake-$(arch).iso
+img := build/os-$(arch).img
 
 rust_os := target/$(target)/debug/libSnowFlake.a
 
@@ -13,10 +14,6 @@ entry_source_file := src/arch/$(arch)/entry.asm
 libc_source_files := $(shell find src/libc -name "*.c")
 libc_object_files := $(patsubst src/libc/%.c, \
     build/libc/%.o, $(libc_source_files))
-
-boot_asm_source_files := $(shell find src/arch/$(arch)/boot -name "*.asm")
-boot_asm_object_files := $(patsubst src/arch/$(arch)/boot/%.asm, \
-    build/arch/$(arch)/boot/%.sys, $(boot_asm_source_files))
 
 CARGO = cargo
 
@@ -32,7 +29,7 @@ STRIP = $(arch)-elf-strip
 
 .PHONY: all clean run iso
 
-all: $(boot_asm_object_files) $(kernel)
+all: $(iso) $(boot_asm_object_files) $(kernel)
 
 clean:
 	@rm -r build target
@@ -42,15 +39,21 @@ run: $(iso)
 
 iso: $(iso)
 
-$(iso): $(boot_asm_object_files) $(kernel)
+$(iso): $(img)
 	@mkdir -p build/iso
 	@mkdir -p build/iso/boot
 	@mkdir -p build/iso/efi/boot
-	@cp build/arch/$(arch)/boot/boot.sys build/iso/boot/boot.sys # Stage 1
-	@cp build/arch/$(arch)/boot/loader.sys build/iso/loader.sys # Stage 2
-	@cp $(kernel) build/iso/kernel.sys
-	@$(STRIP) build/iso/kernel.sys
-	@mkisofs -R -J -c boot/bootcat -b boot/boot.sys -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
+	@mkdir -p build/iso/snow
+	@cp $(img) build/iso/boot/boot.img
+	#@cp build/arch/$(arch)/boot/boot.igloo build/iso/boot/boot.igloo # Stage 1
+	#@cp $(kernel) build/iso/snow/kernel.igloo
+	#@$(STRIP) build/iso/snow/kernel.igloo
+	@mkisofs -R -J -c boot/bootcat -b boot/boot.img -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
+
+$(img): $(kernel)
+	@make -C src/arch/$(arch)/boot
+	@dd if=/dev/zero of=$(img) bs=512 count=1440
+	@dd if=build/arch/$(arch)/boot/boot.igloo of=$(img) conv=notrunc
 
 $(entry):
 	@mkdir -p $(shell dirname $@)
@@ -62,11 +65,6 @@ $(kernel): $(entry) cargo $(rust_os) $(libc_object_files) $(linker_script)
 # compile kernel files
 cargo:
 	xargo build --target $(target)
-
-# compile libc files
-build/arch/$(arch)/boot/%.sys: src/arch/$(arch)/boot/%.asm
-	@mkdir -p $(shell dirname $@)
-	@$(NASM) -f bin $< -o $@
 
 # compile libc files
 build/libc/%.o: src/libc/%.c
