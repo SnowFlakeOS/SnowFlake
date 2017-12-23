@@ -15,7 +15,7 @@ SECTIONS
      * -z max-page-size=0x1000.  Otherwise the kernel file will be too large.
      */
 
-    KERNEL_VMA = 0x00301000;
+    KERNEL_VMA = 0x00100000;
 
     . = KERNEL_VMA;
 

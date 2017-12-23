@@ -3,8 +3,6 @@ target ?= $(arch)-snowflake
 entry := build/entry-$(arch).elf
 kernel := build/kernel-$(arch).elf
 iso := build/snowflake-$(arch).iso
-img := build/os-$(arch).img
-
 rust_os := target/$(target)/debug/libSnowFlake.a
 
 linker_script := src/arch/$(arch)/linker.ld
@@ -28,8 +26,7 @@ OBJCOPY = $(arch)-elf-objcopy
 STRIP = $(arch)-elf-strip
 
 .PHONY: all clean run iso
-
-all: $(iso) $(boot_asm_object_files) $(kernel)
+all: $(iso)
 
 clean:
 	@rm -r build target
@@ -39,21 +36,17 @@ run: $(iso)
 
 iso: $(iso)
 
-$(iso): $(img)
+$(iso): $(kernel)
+	@make -C src/arch/x86_64/boot
 	@mkdir -p build/iso
 	@mkdir -p build/iso/boot
 	@mkdir -p build/iso/efi/boot
 	@mkdir -p build/iso/snow
-	@cp $(img) build/iso/boot/boot.img
-	#@cp build/arch/$(arch)/boot/boot.igloo build/iso/boot/boot.igloo # Stage 1
-	#@cp $(kernel) build/iso/snow/kernel.igloo
-	#@$(STRIP) build/iso/snow/kernel.igloo
-	@mkisofs -R -J -c boot/bootcat -b boot/boot.img -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
-
-$(img): $(kernel)
-	@make -C src/arch/$(arch)/boot
-	@dd if=/dev/zero of=$(img) bs=512 count=1440
-	@dd if=build/arch/$(arch)/boot/boot.igloo of=$(img) conv=notrunc
+	@cp build/arch/$(arch)/boot/boot.bin build/iso/boot/boot.bin # Stage 1
+	@cp build/arch/$(arch)/boot/loader.bin build/iso/boot/loader.bin # Stage 2
+	@cp $(kernel) build/iso/snow/kernel.igloo
+	@$(STRIP) build/iso/snow/kernel.igloo
+	@mkisofs -R -J -c boot/bootcat -b boot/boot.bin -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
 
 $(entry):
 	@mkdir -p $(shell dirname $@)
