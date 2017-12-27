@@ -1,265 +1,190 @@
-; https://github.com/twd2/osdev/blob/master/bootloader/cdrom/stage1.asm
+; https://github.com/anchovieshat/cathode/blob/master/fatboot/boot.asm
 
-; boot from cdrom
-; use bios function 0x42
-; compatible with ISO-9660
+org 0x7C5A
 
-org 0x7c00
-bits 16
+FATCACHE: equ 0x7E00
+LOADLOC: equ 0x8000
 
-_start:
-cli
+%include "fat.inc"
 
-;cmp dl, 0xe0 ; is cdrom?
-;jnz die
+section .text align=1
 
-xor ax, ax
-mov ds, ax
-mov es, ax
-mov ss, ax
-mov sp, 0x7c00 ; init stack
+	jmp 0:start ; fix CS
+start:
+	xor ax, ax
+	mov ds, ax
+	mov es, ax
+	mov ss, ax
+	mov sp, 0x7C00 ; stack grows down from here
+	mov bp, sp
 
-lea si, [loading_str]
-call print
+	cld ; make no assumptions
+	sti ; BIOS may do stuff with interrupts
+	push dx ; save the drive letter for later; accessible at [bp-2]
 
-mov ah, 0x41 ; check extension present
-mov bx, 0x55aa ; magic
-int 0x13 ; bios function
-jc not_present
-cmp bx, 0xaa55 ; magic again
-jne not_present ; if not present...
+	call ext_read_supported
+	test ax, ax
+	jz die ; don't bother if we don't support disk extensions
 
-; find primary volume descriptor
-mov ebx, 16 ; starts at sector 16
-mov ecx, 1 ; descriptors are one sector size.
-mov ax, 0x1000
-mov es, ax
-xor di, di ; buffer = es:di = 1000:0000 = 0x10000
-find_primary_volume_descriptor_loop:
-  call read_sector
-  cmp byte [es:di + volume_descriptor_type], type_primary_volume_descriptor
-  je found_primary_volume_descriptor ; is primary volume descriptor?
-  inc ebx ; try next sector
-jmp find_primary_volume_descriptor_loop
+	; compute the first data sector and push it, too
+	movzx eax, byte [0x7C00+bpb.num_fats]
+	mov ebx, [0x7C00+bpb.sectors_per_fat_32]
+	mul ebx
+	jo die ; overflowed into dx, we don't handle that, so just give up
 
-found_primary_volume_descriptor:
-mov ebx, [es:di + primary_volume_descriptor_root_dir_rec + dir_rec_extent_sector_no]
-mov ecx, [es:di + primary_volume_descriptor_root_dir_rec + dir_rec_data_length]
-shr ecx, 11 ; length to sector count
-; es:di is still 1000:0000 = 0x10000
-call read_sector ; read root directory record
+	movzx ebx, word [0x7C00+bpb.reserved_sectors]
+	add eax, ebx
 
-; find boot dir
-mov ax, es
-mov ds, ax
-mov si, di ; buffer = ds:si = es:di
-mov bx, cx
-shl bx, 11 ; limit + 1 = buffer size
-lea ax, [boot_dir_name]
-call find_entry
-test ax, ax ; found?
-jz path_not_found
+	; EAX now has first data sector, it will be accessible at [bp-6]
+	push eax
 
-mov ebx, [ds:si + dir_rec_extent_sector_no]
-mov ecx, [ds:si + dir_rec_data_length]
-shr ecx, 11 ; length to sector count
-; es:di is still 1000:0000 = 0x10000
-call read_sector ; read `boot' directory record
+	mov edi, LOADLOC
+	mov eax, [0x7C00+bpb.root_cluster]
+	call fat_read_file
 
-; find stage2 file
-mov ax, es
-mov ds, ax
-mov si, di ; buffer = ds:si = es:di
-mov bx, cx
-shl bx, 11 ; limit + 1 = buffer size
-lea ax, [stage2_file_name]
-call find_entry
-test ax, ax ; found?
-jz stage2_not_found
-
-; found stage2
-mov ebx, [ds:si + dir_rec_extent_sector_no]
-mov ecx, [ds:si + dir_rec_data_length]
-add ecx, 2047
-shr ecx, 11 ; length to sector count = ceiling(length / 2048)
-; es:di is still 1000:0000 = 0x10000
-call read_sector ; load stage2 file
-jmp word 0x1000:0000 ; go!
-
-bios_error:
-xor ax, ax
-mov ds, ax
-lea si, [bios_error_str]
-jmp print_and_die
-
-not_present:
-xor ax, ax
-mov ds, ax
-lea si, [not_present_str]
-jmp print_and_die
-
-path_not_found:
-xor ax, ax
-mov ds, ax
-lea si, [path_not_found_str]
-jmp print_and_die
-
-stage2_not_found:
-xor ax, ax
-mov ds, ax
-lea si, [stage2_not_found_str]
-jmp print_and_die
-
-print_and_die:
-call print
-; ... and die ...
+	mov ebx, LOADLOC
+.l:
+	mov al, [ebx]
+	test al, al
+	jz .notfound
+	cmp al, 0xE5 ; unused
+	je .next
+	mov cx, 11
+	mov si, filename
+	mov di, bx ; FIXME inconsistent
+	rep cmpsb
+	je .found
+.next:
+	add ebx, fatde_size
+	jmp .l
+.notfound:
+	jmp die
+.found:
+	mov ax, [ebx+fatde.clust_hi]
+	shl eax, 16
+	mov ax, [ebx+fatde.clust_lo]
+	mov edi, LOADLOC
+	call fat_read_file
+	test ax, ax
+	jz die
+	jmp LOADLOC
 
 die:
-cli
-hlt
-jmp die
+	cli
+	hlt
+	jmp die
 
-; print a string
-; buffer = ds:si
-print:
-lodsb
-or al, al
-jz print_return
-mov ah, 0x0e ; print
-mov bh, 0
-mov bl, 0
-int 0x10 ; bios print
-jmp print
-print_return:
-ret
+ext_read_supported:
+	push bx
+	push cx ; not used here, but interrupt may clobber
 
-; print a '.'
-print_dot:
-mov al, '.'
-mov ah, 0x0e ; print
-mov bh, 0
-mov bl, 0
-int 0x10 ; bios print
-ret
+	mov ah, 0x41
+	mov bx, 0x55aa
+	stc ; carry clear on success
+	int 0x13
+	mov ax, 0 ; 0 = didn't work
+	jc .ret ; failed if carry
+	cmp bx, 0xaa55 ; failed if this isn't rotated
+	jne .ret
+	mov ax, 1 ; 1 = worked
+.ret:
+	pop cx
+	pop bx
+	ret
 
-; read one or more sectors
-; sector LBA = ebx, count = ecx, destination = es:di
-read_sector:
-xor ax, ax
-mov ds, ax
-mov [dap_ptr + dap_lba_low], ebx
-mov [dap_ptr + dap_count], ecx
-lea si, [dap_ptr] ; ds:si = dap_ptr
-mov ax, es
-mov [dap_ptr + dap_seg], ax
-mov [dap_ptr + dap_offset], di ; dap_ptr->seg:offset = es:di
-mov ah, 0x42 ; extended read sector
-int 0x13 ; bios function
-jc bios_error
-push ax ; save ax (set by int 0x13)
-call print_dot
-pop ax
-ret
+ext_read_sector:
+	push dx
+	push si
 
-; find a directory record
-; buffer = ds:si, buffer size = limit + 1 = bx, name_ptr = ax
-find_entry:
-push di
-push es
-push bx
-mov di, ax
-xor ax, ax
-mov es, ax ; es = 0
-add bx, si
-find_entry_loop:
-  cmp si, bx ; buffer > limit?
-  jae find_entry_return0
-  cmp byte [ds:si + dir_rec_length], 0 ; buffer->dir_rec_length == 0?
-  je find_entry_return0
+	mov [dap.lba], esi
+	mov [dap.dest], edi
+	mov ah, 0x42
+	mov dx, [bp-2] ; grab drive letter
+	mov si, dap
+	stc
+	int 0x13
+	mov ax, 0 ; assume failed
+	jc .ret ; failed if carry
+	mov ax, 1
 
-  xor cx, cx
-  mov cl, [ds:si + dir_rec_ident_length]
-  cmp cl, name_min_size ; buffer->dir_rec_ident_length < name_min_size?
-  jb find_entry_loop_continue
+.ret:
+	pop si
+	pop dx
+	ret
+dap:
+.size: db 0x10
+._reserved: db 0
+.blocks: dw 1
+.dest: dd 0
+.lba: dq 0
 
-  xor bp, bp ; i = 0
-  strcmp_loop:
-    mov cl, [es:bp + di] ; pattern char
-    mov ch, [ds:bp + si + dir_rec_ident] ; text char
-    test cl, cl ; is last pattern char?
-    jz strcmp_last
-    cmp cl, ch ; pattern char == text char?
-    jne find_entry_loop_continue ; !=
-    inc bp ; next char
-  jmp strcmp_loop
+fat_read_cluster:
+	push ebx
+	push esi
+	push eax
 
-  strcmp_last:
-  ; (ch == ';' || ch == '\0') || bp == dir_rec_ident_length
-  cmp ch, ';'
-  je find_entry_return1
-  test ch, ch
-  jz find_entry_return1
-  cmp bp, dir_rec_ident_length
-  je find_entry_return1
+	sub eax, 2 ; cluster number - 2
+	movzx ebx, byte [0x7C00+bpb.sectors_per_cluster]
+	mul ebx ; * sectors_per_cluster
+	jo die ; again, die on overflow
+	add eax, [bp-6] ; + first_data_sector
+	mov esi, eax
+	mov [dap.blocks], bx
+	call ext_read_sector
 
-  ; else
+	pop eax
+	pop esi
+	pop ebx
+	ret
 
-  find_entry_loop_continue:
-  ; next entry
-  xor cx, cx
-  mov cl, [ds:si + dir_rec_length]
-  add si, cx ; buffer += buffer->dir_rec_length
-jmp find_entry_loop
+fat_next_cluster:
+	push ebx
+	push edx
+	push esi
+	push edi
 
-find_entry_return0:
-xor ax, ax
-jmp find_entry_return
+	mov ebx, 4
+	mul ebx ; multiply by 4, as each 32-bit entry is 4 bytes
+	jo die ; again, die on overflow
 
-find_entry_return1:
-mov ax, 1
-find_entry_return:
-pop bx
-pop es
-pop di
-ret
+	cdq ; prepare for division
+	movzx ebx, word [0x7C00+bpb.sector_size]
+	div ebx ; edx has remainder
 
-dap_ptr:
-db 16 ; dap size = 16
-db 0 ; reserved
-dw 1 ; count
-dd 0 ; destination
-dd 0 ; sector LBA low
-dd 0 ; sector LBA high
+	movzx ebx, word [0x7C00+bpb.reserved_sectors] ; first FAT sector
+	add eax, ebx
 
-dap_count equ 2
-dap_offset equ 4
-dap_seg equ 6
-dap_lba_low equ 8
-dap_lba_high equ 12
+	; read sector eax, then index it by edx
+	mov edi, FATCACHE
+	mov esi, eax
+	mov word [dap.blocks], 1
+	call ext_read_sector
+	test ax, ax
+	jz .ret ; early return on failure
 
-volume_descriptor_type equ 0
-type_primary_volume_descriptor equ 0x01
+	mov eax, [FATCACHE+edx]
+	and eax, 0x0FFFFFFF ; ignore "reserved" bits
 
-; data struct offset
-primary_volume_descriptor_root_dir_rec equ 156
-dir_rec_length equ 0
-dir_rec_extent_sector_no equ 2
-dir_rec_data_length equ 10
-dir_rec_ident_length equ 32
-dir_rec_ident equ 33
+.ret:
+	pop edi
+	pop esi
+	pop edx
+	pop ebx
+	ret
 
-; constant strings
-loading_str db "Loading.", 0
-bios_error_str db "BIOS error.", 0
-not_present_str db "Extensions not present.", 0
-path_not_found_str db "Path not found.", 0
-stage2_not_found_str db "Stage2 not found.", 0
+fat_read_file:
+	push ebx
+.l:
+	cmp eax, 0xFFFFFF8
+	jae .ret
+	call fat_read_cluster
+	movzx ebx, word [0x7C00+bpb.sector_size]
+	add edi, ebx
+	call fat_next_cluster
+	jmp .l
 
-; /BOOT/LOADER.BIN
-name_min_size equ 4 ; length of "BOOT"
-boot_dir_name db "BOOT", 0
-stage2_file_name db "LOADER.BIN", 0
+.ret:
+	pop ebx
+	ret
 
-times 510 - ($ - $$) db 0
-db 0x55
-db 0xaa
+filename: db "LOADER  BIN"

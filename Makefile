@@ -2,7 +2,7 @@ arch ?= x86_64
 target ?= $(arch)-snowflake
 entry := build/entry-$(arch).elf
 kernel := build/kernel-$(arch).elf
-iso := build/snowflake-$(arch).iso
+img := build/snowflake-$(arch).img
 rust_os := target/$(target)/debug/libSnowFlake.a
 
 linker_script := src/arch/$(arch)/linker.ld
@@ -25,28 +25,24 @@ AS = $(arch)-elf-as
 OBJCOPY = $(arch)-elf-objcopy
 STRIP = $(arch)-elf-strip
 
-.PHONY: all clean run iso
-all: $(iso)
+.PHONY: all clean run img
+all: $(img)
 
 clean:
 	@rm -r build target
 
-run: $(iso)
-	@qemu-system-x86_64 -m 256M -cdrom $(iso)
+run: $(img)
+	@qemu-system-x86_64 -m 256M  $(img)
 
-iso: $(iso)
+img: $(img)
 
-$(iso): $(kernel)
+$(img): $(kernel)
 	@make -C src/arch/x86_64/boot
-	@mkdir -p build/iso
-	@mkdir -p build/iso/boot
-	@mkdir -p build/iso/efi/boot
-	@mkdir -p build/iso/snow
-	@cp build/arch/$(arch)/boot/boot.bin build/iso/boot/boot.bin # Stage 1
-	@cp build/arch/$(arch)/boot/loader.bin build/iso/boot/loader.bin # Stage 2
-	@cp $(kernel) build/iso/snow/kernel.igloo
-	@$(STRIP) build/iso/snow/kernel.igloo
-	@mkisofs -R -J -c boot/bootcat -b boot/boot.bin -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
+	@dd if=/dev/zero of=$(img) bs=1M count=10
+	@mkfs.vfat -F32 $(img)
+	@dd if=build/arch/$(arch)/boot/boot.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
+	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot/loader.bin ::/loader.bin
+	#@mkisofs -R -J -c boot/bootcat -b boot/boot.bin -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
 
 $(entry):
 	@mkdir -p $(shell dirname $@)
