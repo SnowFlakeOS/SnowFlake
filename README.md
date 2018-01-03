@@ -44,4 +44,4 @@ Will be added later
 - https://github.com/beevik/MonkOS
 - https://github.com/thepowersgang/rust_os
 - https://github.com/wichtounet/thor-os
-- https:;github.com/anchovieshat/cathode
+- https://github.com/anchovieshat/cathode
