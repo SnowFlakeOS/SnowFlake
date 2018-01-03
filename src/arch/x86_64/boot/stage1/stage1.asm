@@ -5,7 +5,7 @@ org 0x7C5A
 FATCACHE: equ 0x7E00
 LOADLOC: equ 0x8000
 
-%include "fat.inc"
+%include "stage1/fat.inc"
 
 section .text align=1
 
@@ -187,4 +187,4 @@ fat_read_file:
 	pop ebx
 	ret
 
-filename: db "LOADER  BIN"
+filename: db "STAGE2  BIN"

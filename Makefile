@@ -32,7 +32,7 @@ clean:
 	@rm -r build target
 
 run: $(img)
-	@qemu-system-x86_64 -m 256M  $(img)
+	@qemu-system-x86_64 -enable-kvm -cpu host -serial file:virtual.log -vga std -hda  $(img)
 
 img: $(img)
 
@@ -40,8 +40,8 @@ $(img): $(kernel)
 	@make -C src/arch/x86_64/boot
 	@dd if=/dev/zero of=$(img) bs=1M count=10
 	@mkfs.vfat -F32 $(img)
-	@dd if=build/arch/$(arch)/boot/boot.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
-	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot/loader.bin ::/loader.bin
+	@dd if=build/arch/$(arch)/boot/stage1.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
+	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot/stage2.bin ::/stage2.bin
 	#@mkisofs -R -J -c boot/bootcat -b boot/boot.bin -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
 
 $(entry):

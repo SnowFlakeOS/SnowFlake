@@ -1,39 +1,96 @@
-; https://github.com/anchovieshat/cathode/blob/master/stage2/load.asm
+; https:;github.com/anchovieshat/cathode/blob/master/stage2/load.asm
 
-org 0x8000
 bits 16
 
-%include "fat.inc"
+extern s2main
+global intcall
 
-; TODO - Load kernel from disk
-
+section .text16
 start:
 	mov dx, [bp-2] ; keep drive letter around
+	mov bp, msg
+	mov cx, msg.size
+	call print
 
+	mov bp, disab
+	mov cx, disab.size
 	call check_a20
 	test ax, ax
 	jnz .s
-	call .die
+	call print
+	call die
+.s:
+	cli
+.goto_prot
+	lgdt [gdtr]
+	mov eax, cr0
+	or eax, 1
+	mov cr0, eax
+	push dword 0x08
+	push dword prot_main
+	jmp 0x08:prot_start
 
-    .s:
-	    cli
+die:
+	cli
+	hlt
+	jmp die
 
-    .goto_prot
-	    lgdt [gdtr32]
-	    mov eax, cr0
-	    or eax, 1
-	    mov cr0, eax
-	    push dword 0x08
-	    push dword prot_main
-	    jmp 0x08:prot_start
+intcall_bounce16:
+	mov ecx, cr0
+	and ecx, ~1
+	mov cr0, ecx
+	mov [0x7C00], esp
+	mov sp, di
 
-    .die:
-	    cli
-	    hlt
-	    jmp .die
+	jmp 0:intcall_16
+.return:
+	mov ecx, cr0
+	or ecx, 1
+	mov cr0, ecx
+	mov esp, [0x7C00]
+	jmp 0x08:prot_start
 
+intcall_16:
+  mov ax, 0
+  mov ss, ax
+	sti
+
+	;int 0x10
+
+	pop ds
+	pop es
+	pop ax
+	pop bx
+	pop cx
+	pop dx
+	pop si
+	pop di
+	pop bp
+	popf
+
+	;int 0x10
+
+	retf
+
+; {{{
+print:
+	push ax
+	push bx
+.l:
+	mov al, [bp]
+	inc bp
+	mov ah, 0x0E
+	xor bx, bx
+	int 0x10
+	loop .l
+	pop bx
+	pop ax
+	ret
+; }}}
+
+; {{{
 check_a20:
-    push ds
+	push ds
 	push es
 	push ax
 	push di
@@ -64,7 +121,6 @@ check_a20:
 	mov ax, 0
 	je .ret
 	mov ax, 1
-
 .ret:
 	pop si
 	pop di
@@ -73,155 +129,85 @@ check_a20:
 	pop ds
 	sti
 	ret
+; }}}
 
-;-------------------------------------------------------------------------
-; - Protected Mode Init
-;-------------------------------------------------------------------------
-
+section .text
 bits 32
-
-    prot_start:
-	    mov eax, 0x10
-	    mov ds, eax
-	    mov es, eax
-	    mov fs, eax
-	    mov gs, eax
-	    mov ss, eax
-	    retf
-
-    prot_main:
-	    mov esp, 0x8000
-	    mov ebp, esp
-	    mov eax, edx
-	    movzx eax, dl
-	    push eax ; push drive letter, at [bp-4]
-	    cld ; just checking
-	    call EnableLM
-
-;-------------------------------------------------------------------------
-; - Eanble Long Mode
-;-------------------------------------------------------------------------
-
-EnableLM:
-
-    call build_page_tables
-
-    ; Enable PAE
-    mov eax, cr4                 
-    or eax, 1 << 5               
-    mov cr4, eax
-
-    ; # Optional : Enable global-page mechanism by setting CR0.PGE bit to 1
-    mov eax, cr4                 
-    or eax, 1 << 7               
-    mov cr4, eax
-
-    ; Load CR3 with PML4 base address
-    ; NB: in some examples online, the address is not offseted as it seems to
-    ; be in the proc datasheet (if you were wondering about this strange thing).
-    mov eax, 0x1000
-    mov cr3, eax
-
-    ; Check PML5 & Enable PML5
-    mov eax, 0x7                 ; You might want to check for page 7 first!
-    xor ecx, ecx
-    cpuid
-    test ecx, (1<<16)
-    jnz .5_level_paging
-
-    ; Set LME bit in EFER register (address 0xC0000080)
-    mov ecx, 0xC0000080     ; operand of 'rdmsr' and 'wrmsr'
-    rdmsr                   ; read before pr ne pas écraser le contenu
-    or eax, 1 << 8          ; eax : operand de wrmsr
-    wrmsr
-
-    ; Enable paging by setting CR0.PG bit to 1
-    mov eax, cr0
-    or eax, (1 << 31)
-    mov cr0, eax
-
-    ; Load 64-bit GDT
-    lgdt [GDT64.Pointer]
-
-    ; Jump to code segment in 64-bit GDT
-    jmp GDT64.Code:(_start64)
-
-    ; Enable PML5
-    .5_level_paging:
-        mov eax, cr4
-        or eax, (1<<12) ;CR4.LA57
-        mov cr4, eax
-
-build_page_tables:
-    ; PML4 starts at 0x1000
-    ; il faut laisser la place pour tte la page PML4/PDP/PD ie. 0x1000
-
-    ; PML4 @ 0x1000
-    mov eax, 0x2000         ;PDP base address            
-    or eax, 0b11            ;P and R/W bits
-    mov ebx, 0x1000         ;MPL4 base address
-    mov [ebx], eax
-
-    ; PDP @ 0x2000; maps 64Go
-    mov eax, 0x3000         ;PD base address
-    mov ebx, 0x2000         ;PDP physical address   
-    mov ecx, 64             ;64 PDP
-
-build_PDP:
-    or eax, 0b11    
-        mov [ebx], eax
-        add ebx, 0x8
-        add eax, 0x1000     ;next PD page base address
-        loop build_PDP
-
-    ;PD @ 0x3000 (ends at 0x4000, fits below 0x7c00)
-    ; 1 entry maps a 2MB page, the 1st starts at 0x0
-    mov eax, 0x0            ;1st page physical base address     
-    mov ebx, 0x3000         ;PD physical base address
-    mov ecx, 512                        
-
-    build_PD:
-        or eax, 0b10000011      ;P + R/W + PS (bit for 2MB page)
-        mov [ebx], eax
-        add ebx, 0x8
-        add eax, 0x200000       ;next 2MB physical page
-        loop build_PD
-
-    ;(tables end at 0x4000 => fits before Bios boot sector at 0x7c00)
-    ret
-
-;-------------------------------------------------------------------------
-; - Long Mode Init
-;-------------------------------------------------------------------------
-
-bits 64
-
-_start64:
-
-    mov eax, 0x10
+prot_start:
+	mov eax, 0x10
 	mov ds, eax
 	mov es, eax
 	mov fs, eax
 	mov gs, eax
 	mov ss, eax
-
-    mov esp, 0x8000
+	retf
+prot_main:
+	mov esp, 0x8000
 	mov ebp, esp
 	mov eax, edx
 	movzx eax, dl
+	push eax ; push drive letter, at [bp-4]
+	cld ; just checking
+	call s2main
+	hlt
+	jmp $
 
-    mov rax, 0x2f592f412f4b2f4f
-    mov qword [0xb8000], rax
-    hlt
+intcall:
+	push ebp
+	mov ebp, esp
+	pushfd
+	pushad
 
-.die:
-    cli
-    hlt
-    jmp .die
+	mov al, [ebp+8] ; interrupt number
+	lea esi, [ebp+12] ; RM structure
 
-bits 16
+	mov edi, 0x7C00 ; RM stack
 
-gdt32:
+  ; pushing RM return address
+	o16 pushf ; FLAGS
+	pop cx
+	sub di, 2
+	mov [di], cx
+	sub di, 2
+	mov word [di], 0 ; CS
+	sub di, 2
+	mov word [di], intcall_bounce16.return
+
+  ; pushing interrupt address
+	mov dl, 4 ; 4 bytes per interrupt in IVT (cs+off)
+  mul dl ; *4
+	mov bx, ax
+	mov cx, [bx+2] ; push cs
+	sub di, 2
+	mov [di], cx
+	mov cx, [bx] ; push off
+	sub di, 2
+	mov [di], cx
+
+	sub di, 0x14 ; size of structure
+
+	mov ecx, 0x14
+	rep movsb
+
+	sub di, 0x14
+
+	call 0x18:intcall_bounce16
+
+	popad
+	popfd
+	pop ebp
+	ret
+
+
+section .rodata
+
+msg: db "Booting stage2...",0xa,0xd
+.size: equ $-msg
+
+disab: db "A20 disabled...",0xa,0xd
+.size: equ $-disab
+
+gdt:
 .null: dd 0
 	   db 0
 	   db 00010000b
@@ -251,35 +237,5 @@ gdt32:
 		 db 00000000b
 		 db 0
 .end:
-gdtr32: dw (gdt32.end-gdt32)-1
-	  dd gdt32
-
-; GDT 64
-
-bits 32
-
-GDT64:                           ; Global Descriptor Table (64-bit).
-    .Null: equ $ - GDT64         ; The null descriptor.
-    dw 0                         ; Limit (low).
-    dw 0                         ; Base (low).
-    db 0                         ; Base (middle)
-    db 0                         ; Access.
-    db 0                         ; Granularity.
-    db 0                         ; Base (high).
-    .Code: equ $ - GDT64         ; The code descriptor.
-    dw 0                         ; Limit (low).
-    dw 0                         ; Base (low).
-    db 0                         ; Base (middle)
-    db 10011010b                 ; Access (exec/read).
-    db 00100000b                 ; Granularity.
-    db 0                         ; Base (high).
-    .Data: equ $ - GDT64         ; The data descriptor.
-    dw 0                         ; Limit (low).
-    dw 0                         ; Base (low).
-    db 0                         ; Base (middle)
-    db 10010010b                 ; Access (read/write).
-    db 00000000b                 ; Granularity.
-    db 0                         ; Base (high).
-    .Pointer:                    ; The GDT-pointer.
-    dw $ - GDT64 - 1             ; Limit.
-    dq GDT64                     ; Base.
+gdtr: dw (gdt.end-gdt)-1
+	  dd gdt
