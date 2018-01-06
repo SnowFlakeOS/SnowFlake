@@ -9,15 +9,7 @@ linker_script := src/arch/$(arch)/linker.ld
 
 entry_source_file := src/arch/$(arch)/entry.asm
 
-libc_source_files := $(shell find src/libc -name "*.c")
-libc_object_files := $(patsubst src/libc/%.c, \
-    build/libc/%.o, $(libc_source_files))
-
 CARGO = cargo
-
-CC = x86_64-elf-gcc
-CFLAGS = -target $(arch)-pc-linux-gnu -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -nostdlib -Isrc/include/libc
-
 NASM = nasm
 
 LD = $(arch)-elf-ld
@@ -48,8 +40,8 @@ $(entry):
 	@mkdir -p $(shell dirname $@)
 	@$(NASM) -f elf64 $(entry_source_file) -o $(entry)
 
-$(kernel): $(entry) cargo $(rust_os) $(libc_object_files) $(linker_script)
-	@$(LD) -n --gc-sections -T $(linker_script) -o $(kernel) $(entry) $(libc_object_files) $(rust_os) -z max-page-size=0x1000
+$(kernel): $(entry) cargo $(rust_os) $(linker_script)
+	@$(LD) -n --gc-sections -T $(linker_script) -o $(kernel) $(entry) $(rust_os) -z max-page-size=0x1000
 
 # compile kernel files
 cargo:
