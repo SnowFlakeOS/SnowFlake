@@ -15,7 +15,7 @@ libc_object_files := $(patsubst src/libc/%.c, \
 
 CARGO = cargo
 
-CC = clang
+CC = x86_64-elf-gcc
 CFLAGS = -target $(arch)-pc-linux-gnu -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -nostdlib -Isrc/include/libc
 
 NASM = nasm
@@ -54,8 +54,3 @@ $(kernel): $(entry) cargo $(rust_os) $(libc_object_files) $(linker_script)
 # compile kernel files
 cargo:
 	xargo build --target $(target)
-
-# compile libc files
-build/libc/%.o: src/libc/%.c
-	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CFLAGS) -c $< -o $@

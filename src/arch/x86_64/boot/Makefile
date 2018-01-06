@@ -1,11 +1,11 @@
-CXX = g++
-CC = gcc
+CXX = x86_64-elf-g++
+CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 NASM = nasm
 BUILD_DIR = ../../../../build/arch/x86_64/boot
 
 CFLAGS = -m32 -masm=intel -ffreestanding -O2 -Wall -Wextra -fno-exceptions -mno-sse -Iinclude/libc -Iinclude
-CXXFLAGS = $(CFLAGS) -std=c++17 -fno-rtti
+CXXFLAGS = $(CFLAGS) -std=c++1z -fno-rtti
 
 linker_script := linker.ld
 
