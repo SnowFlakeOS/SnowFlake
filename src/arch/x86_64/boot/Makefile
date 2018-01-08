@@ -4,8 +4,8 @@ LD = x86_64-elf-ld
 NASM = nasm
 BUILD_DIR = ../../../../build/arch/x86_64/boot
 
-CFLAGS = -m32 -masm=intel -ffreestanding -O2 -Wall -Wextra -fno-exceptions -mno-sse -Iinclude/libc -Iinclude
-CXXFLAGS = $(CFLAGS) -std=c++1z -fno-rtti
+CFLAGS = -m32 -masm=intel -ffreestanding -fno-stack-protector -O2 -Wall -Wextra -fno-exceptions -mno-sse -fno-pie -Iinclude/libc -Iinclude
+CXXFLAGS = $(CFLAGS) -std=c++17 -fno-rtti
 
 linker_script := linker.ld
 

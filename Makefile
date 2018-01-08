@@ -21,14 +21,14 @@ STRIP = $(arch)-elf-strip
 all: $(img)
 
 clean:
-	@rm -r build target
+	@rm -r build #target
 
 run: $(img)
-	@qemu-system-x86_64 -enable-kvm -cpu host -serial file:virtual.log -vga std -hda  $(img)
+	@qemu-system-x86_64 -enable-kvm -cpu host -serial file:virtual.log -vga std -hda $(img)
 
 img: $(img)
 
-$(img): $(kernel)
+$(img): #$(kernel)
 	@make -C src/arch/x86_64/boot
 	@dd if=/dev/zero of=$(img) bs=1M count=10
 	@mkfs.vfat -F32 $(img)
