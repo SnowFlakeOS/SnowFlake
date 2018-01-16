@@ -1,8 +1,8 @@
 #ifndef CONSOLE_HPP
 #define CONSOLE_HPP
 
-#define LOG_HEAD "[FLAKE]"
-#define ERROR_HEAD "[ERROR]"
+#define LOG_HEAD "Boot2Snow -"
+#define ERROR_HEAD "Error -"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -16,7 +16,7 @@ class console {
         }
 
         void log(const char* message);
-        void error(const char* message);
+        [[noreturn]] void error(const char* message);
         void val(const char* message, uint32_t value);
 };
 

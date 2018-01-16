@@ -1,6 +1,7 @@
-CXX = x86_64-elf-g++
-CC = x86_64-elf-gcc
-LD = x86_64-elf-ld
+arch ?= x86_64
+CXX = $(arch)-elf-g++
+CC = $(arch)-elf-gcc
+LD = $(arch)-elf-ld
 NASM = nasm
 BUILD_DIR = ../../../../build/arch/x86_64/boot
 

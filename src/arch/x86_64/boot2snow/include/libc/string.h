@@ -19,6 +19,7 @@ void* memmove(void*, const void*, size_t);
 void* memset(void*, int, size_t);
 void itoa(char *buf, unsigned long int n, int base);
 size_t strlen(const char*);
+char *strncpy(char *dest, const char *src, size_t n);
  
 #ifdef __cplusplus
 }

@@ -13,9 +13,7 @@ class io {
         static inline uint8_t inb(uint16_t port)
         {
             uint8_t ret;
-            asm volatile ( "in %0, %1"
-                                : "=a"(ret)
-                                : "dN"(port) );
+            asm volatile("in %0,%1" : "=a" (ret) : "dN" (port));
             return ret;
         }
 

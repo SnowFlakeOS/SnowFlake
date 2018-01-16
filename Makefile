@@ -1,6 +1,6 @@
 arch ?= x86_64
 target ?= $(arch)-snowflake
-entry := build/entry-$(arch).elf
+entry := build/entry-$(arch).o
 kernel := build/kernel-$(arch).elf
 img := build/snowflake-$(arch).img
 rust_os := target/$(target)/debug/libSnowFlake.a
@@ -29,8 +29,8 @@ run: $(img)
 img: $(img)
 
 $(img): #$(kernel)
-	@make -C src/arch/x86_64/boot
-	@dd if=/dev/zero of=$(img) bs=1M count=10
+	@make -C src/arch/x86_64/boot2snow
+	@dd if=/dev/zero of=$(img) bs=1M count=100
 	@mkfs.vfat -F32 $(img)
 	@dd if=build/arch/$(arch)/boot/stage1.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
 	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot/stage2.bin ::/stage2.bin
