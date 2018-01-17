@@ -28,7 +28,7 @@ macro_rules! println {
 
 macro_rules! print {
     ($($arg:tt)*) => ({
-            $crate::vga_buffer::print(format_args!($($arg)*));
+        $crate::vga_buffer::print(format_args!($($arg)*));
     });
 }
 
@@ -86,7 +86,7 @@ impl Writer {
 
                 self.buffer().chars[row][col].write(ScreenChar {
                     ascii_character: byte,
-                    color_code: color_code,
+                    color_code,
                 });
                 self.column_position += 1;
             }

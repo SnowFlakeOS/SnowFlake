@@ -48,8 +48,7 @@ pub struct VBEModeInfo {
     offscreenmemsize: u16,
 }
 
-impl VBEModeInfo 
-{
+impl VBEModeInfo {
     unsafe fn from_raw_parts(vbe_addr: usize) -> &'static VBEModeInfo {
         &*(vbe_addr as *const VBEModeInfo)
     }
