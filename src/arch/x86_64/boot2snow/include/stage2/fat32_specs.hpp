@@ -8,7 +8,7 @@
 #ifndef FAT32_SPECS_HPP
 #define FAT32_SPECS_HPP
 
-#include <stddef.h>
+#include <types.hpp>
 
 namespace fat32 {
 

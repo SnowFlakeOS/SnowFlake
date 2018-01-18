@@ -10,7 +10,7 @@
 #ifndef LONGMODE_HPP
 #define LONGMODE_HPP
 
-#include <stddef.h>
+#include <types.hpp>
 #include <stage2/ealy_memory.hpp>
 #include <stage2/console.hpp>
 

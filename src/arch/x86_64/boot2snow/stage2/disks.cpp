@@ -1,6 +1,3 @@
-// https://github.com/wichtounet/thor-os/tree/develop/init
-// http://wiki.osdev.org/User:Requimrar/FAT32
-
 #include <stage2/disks.hpp>
 
 void disks::init() {
@@ -11,6 +8,8 @@ void disks::init() {
     printf("Root Directory Cluster Start : %d\n", fat_bs->root_directory_cluster_start);
     
     printf("clusterToLBA(fat_bs->root_directory_cluster_start) : %d\n", clusterToLBA(fat_bs->root_directory_cluster_start));
+    struct partition *part = (struct partition*)((size_t) BOOTSECTOR_BASE + 0x1be);
+    printf("part->start_lba : %d\n", part->start_lba);
 }
 
 void disks::get() {
@@ -47,7 +46,5 @@ uint64_t disks::clusterToLBA(uint32_t cluster) {
     printf("auto total_clusters = %d\n", total_clusters);
     auto first_data_sector = fat_bs->reserved_sectors + (fat_bs->number_of_fat * fat_bs->sectors_per_fat) + root_directory_sectors;
     printf("auto first_data_sector = %d\n", first_data_sector);
-    auto first_sector_of_cluster = ((cluster - 2) * fat_bs->sectors_per_cluster) + first_data_sector;
-    printf("auto first_sector_of_cluster = %d\n\n", first_sector_of_cluster);
-    return first_sector_of_cluster + cluster * fat_bs->sectors_per_cluster - (2 * fat_bs->sectors_per_cluster);
+    return first_data_sector + cluster * fat_bs->sectors_per_cluster - (2 * fat_bs->sectors_per_cluster);
 }

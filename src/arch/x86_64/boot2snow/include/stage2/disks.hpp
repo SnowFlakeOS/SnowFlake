@@ -1,7 +1,7 @@
 #ifndef DISKS_HPP
 #define DISKS_HPP
 
-#include <stddef.h>
+#include <types.hpp>
 #include <string.h>
 #include <stage2/io.hpp>
 #include <stage2/console.hpp>

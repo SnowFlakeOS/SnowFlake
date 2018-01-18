@@ -30,7 +30,7 @@ img: $(img)
 
 $(img): #$(kernel)
 	@make -C src/arch/x86_64/boot2snow
-	@dd if=/dev/zero of=$(img) bs=1M count=100
+	@dd if=/dev/zero of=$(img) bs=1M count=10
 	@mkfs.vfat -F32 $(img)
 	@dd if=build/arch/$(arch)/boot/stage1.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
 	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot/stage2.bin ::/stage2.bin

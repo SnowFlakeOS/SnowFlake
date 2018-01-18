@@ -1,6 +1,15 @@
 {
     "files.associations": {
         "*.inc": "cpp",
-        "*.def": "cpp"
-    }
+        "*.def": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "optional": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "bitset": "cpp",
+        "list": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -5,7 +5,7 @@
 #define ERROR_HEAD "Error -"
 
 #include <stdio.h>
-#include <stddef.h>
+#include <types.hpp>
 #include <console/tty.h>
 
 class console {

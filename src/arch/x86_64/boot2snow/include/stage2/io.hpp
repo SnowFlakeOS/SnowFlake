@@ -1,7 +1,7 @@
 #ifndef IO_HPP
 #define IO_HPP
 
-#include <stddef.h>
+#include <types.hpp>
 
 class io {
     public:
