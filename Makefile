@@ -32,8 +32,8 @@ $(img): #$(kernel)
 	@make -C src/arch/x86_64/boot2snow
 	@dd if=/dev/zero of=$(img) bs=1M count=10
 	@mkfs.vfat -F32 $(img)
-	@dd if=build/arch/$(arch)/boot/stage1.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
-	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot/stage2.bin ::/stage2.bin
+	@dd if=build/arch/$(arch)/boot2snow/stage1.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
+	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot2snow/stage2.bin ::/stage2.bin
 	#@mkisofs -R -J -c boot/bootcat -b boot/boot.bin -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
 
 $(entry):

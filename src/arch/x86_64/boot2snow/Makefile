@@ -1,31 +1,29 @@
 arch ?= x86_64
-CXX = $(arch)-elf-g++
-CC = $(arch)-elf-gcc
 LD = $(arch)-elf-ld
 NASM = nasm
-BUILD_DIR = ../../../../build/arch/x86_64/boot
+BUILD_DIR = ../../../../build/arch/x86_64/boot2snow
 
-CFLAGS = -m32 -masm=intel -mpreferred-stack-boundary=4 -ffreestanding -fno-stack-protector -O2 -Wall -Wextra -fno-exceptions -mno-sse -fno-pie -Iinclude/libc -Iinclude/stl -Iinclude
-CXXFLAGS = $(CFLAGS) -std=c++17 -fno-rtti
+CRYSTAL = crystal
+CRYSTALFLAGS = --emit=obj --cross-compile --target=i386 --prelude=empty --link-flags "-nostdlib -m32 -fno-pie"
+
+target ?= i386-boot2snow
 
 linker_script := linker.ld
 
 stage1_source := stage1/stage1.asm
 stage1_object := $(BUILD_DIR)/stage1.bin
 
-libc_src := $(shell find libc -name "*.c")
-libc_obj := $(patsubst libc/%.c, \
-    $(BUILD_DIR)/libc/%.o, $(libc_src))
-
-stage2_cxx_src := $(shell find stage2 -name "*.cpp")
-stage2_cxx_obj := $(patsubst stage2/%.cpp, \
-    $(BUILD_DIR)/stage2/cxx/%.o, $(stage2_cxx_src))
-
 stage2_asm_src := $(shell find stage2 -name "*.asm")
 stage2_asm_obj := $(patsubst stage2/%.asm, \
     $(BUILD_DIR)/stage2/asm/%.o, $(stage2_asm_src))
 
+stage2_crystal_src := stage2/s2main.cr
+stage2_crystal_obj := $(patsubst stage2/%.cr, \
+    $(BUILD_DIR)/stage2/crystal/%.o, $(stage2_crystal_src))
+
 stage2_object := $(BUILD_DIR)/stage2.bin
+
+rust_os := target/$(target)/debug/libBoot2Snow.a
 
 .PHONY: all
 
@@ -37,20 +35,15 @@ $(stage1_object): $(stage1_source)
 	@$(NASM) -f bin $< -o $@
 
 # compile stage2
-$(stage2_object): $(libc_obj) $(stage2_asm_obj) $(stage2_cxx_obj)
-	@$(LD) -T $(linker_script) -o $@ $(libc_obj) $(stage2_asm_obj) $(stage2_cxx_obj)
+$(stage2_object): $(stage2_asm_obj) $(stage2_crystal_obj)
+	@$(LD) --ignore-unresolved-symbol _GLOBAL_OFFSET_TABLE_ -T $(linker_script) -o $@ $(stage2_asm_obj) $(stage2_crystal_obj).o
 
 # compile stage2 asm files
 $(BUILD_DIR)/stage2/asm/%.o: stage2/%.asm
 	@mkdir -p $(shell dirname $@)
 	@$(NASM) -f elf $< -o $@
 
-# compile stage2 cxx files
-$(BUILD_DIR)/stage2/cxx/%.o: stage2/%.cpp
+# compile stage2 crystal files
+$(BUILD_DIR)/stage2/crystal/%.o: stage2/%.cr
 	@mkdir -p $(shell dirname $@)
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# compile libc files
-$(BUILD_DIR)/libc/%.o: libc/%.c
-	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CRYSTAL) build $(CRYSTALFLAGS) -o $@ $<
