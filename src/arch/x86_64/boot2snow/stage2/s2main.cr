@@ -10,8 +10,10 @@
 require "./runtime/src/prelude"
 require "./lib/terminal"
 require "./lib/longmode"
+require "./lib/fat32"
 
 fun s2main()
   Terminal.clear
   LongMode.init
+  FAT32.init
 end

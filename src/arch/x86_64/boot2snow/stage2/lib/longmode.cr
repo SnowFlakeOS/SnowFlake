@@ -15,7 +15,7 @@ module LongMode
 
     def init
         activate_pae
-        log "PAE Activated!"
+        log "PAE activated!"
 
         setup_paging
         log "Paging configured!"
