@@ -20,7 +20,7 @@ module LongMode
         setup_paging
         log "Paging configured!"
 
-        enable_long_mode # Crash
+        # enable_long_mode # Crash
         log "Long mode enabled!"
     end
 
@@ -42,15 +42,16 @@ module LongMode
     private def setup_paging
         clear_tables PML4T
 
-        pml4t_ptr : UInt32* = Pointer(UInt32).new (UInt64.new PML4T)
-        pml4t_ptr[0] = UInt32.new PML4T + PAGE_SIZE + 0x7
+        # PML4T[0] -> PDPT
+        Pointer(UInt32).new(UInt64.new PML4T)[0] = UInt32.new PML4T + PAGE_SIZE + 0x7
 
-        pdpt_ptr : UInt32* = Pointer(UInt32).new (UInt64.new PML4T + 1 * PAGE_SIZE)
-        pdpt_ptr[0] = UInt32.new PML4T + 2 * PAGE_SIZE + 0x7
+        # PDPT[0] -> PDT
+        Pointer(UInt32).new(UInt64.new PML4T + 1 * PAGE_SIZE)[0] = UInt32.new PML4T + 2 * PAGE_SIZE + 0x7
 
-        pd_ptr : UInt32* = Pointer(UInt32).new (UInt64.new PML4T + 2 * PAGE_SIZE)
-        pd_ptr[0] = PML4T + 3 * PAGE_SIZE + 0x7
+        # PD[0] -> PT
+        Pointer(UInt32).new(UInt64.new PML4T + 2 * PAGE_SIZE)[0] = PML4T + 3 * PAGE_SIZE + 0x7
 
+        # Map the first MiB
         page_table_ptr : UInt32* = Pointer(UInt32).new (UInt64.new PML4T + 3 * PAGE_SIZE)
         phys = 0x3
 

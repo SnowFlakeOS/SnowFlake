@@ -29,6 +29,15 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "taskName": "sh x86_64-linux_env.sh",
+            "type": "shell",
+            "command": "sh x86_64-linux_env.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
