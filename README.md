@@ -1,17 +1,26 @@
+<img align="left" width="64px" src="logo.png" />
+
 # SnowFlake
+
+[![BSD-3-Clause][s1]][li]
+
+[s1]: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
+
+[li]: LICENSE
+
 SnowFlake, this is an Operating System written in Rust.
 
-# Building
+## Building
 This is SnowFlake is require for build.
 - Rust (https://www.rust-lang.org)
 - NASM (http://www.nasm.us/)
 - GCC Toolchain or GCC (https://gcc.gnu.org/)
 - Crystal (https://crystal-lang.org)
 
-## Windows
+### Windows
 Will be added later
 
-## Mac
+### Mac
 macOS is default ld is bsd ld (cannot link SnowFlake)
 and default as is clang too (build error)
 If you want build SnowFlake on macOS
@@ -30,13 +39,13 @@ $ cd SnowWhite
 $ make run
 ```
 
-## Linux
+### Linux
 To build SnowFlake as an x86_64 target, x86_64-elf cross-compilation is required.
 If you do not have the x86_64-elf compiler, and your system is x86_64, you can use the 'x86_64-linux_env.sh' script.
 ```
 $ sh x86_64-linux_env.sh
 ```
-### Arch Linux
+#### Arch Linux
 ```
 $ pacman -S qemu nasm crystal
 $ git clone https://github.com/SnowFlake/SnowFlake.git
@@ -44,7 +53,7 @@ $ cd SnowWhite
 $ make run
 ```
 
-# Thanks to
+## Thanks to
 - https://github.com/phil-opp/blog_os
 - https://github.com/beevik/MonkOS
 - https://github.com/thepowersgang/rust_os
