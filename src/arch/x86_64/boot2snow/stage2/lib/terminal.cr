@@ -12,8 +12,7 @@ end
 def log(val : String)
   print LOG_HEAD
   print " - "
-  print val
-  print "\r\n"
+  puts val
 end
 
 module Terminal
