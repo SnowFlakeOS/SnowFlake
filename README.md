@@ -8,7 +8,7 @@
 
 [li]: LICENSE
 
-SnowFlake, this is an Operating System written in Rust.
+SnowFlake, this is an Operating System written in Rust with Crystal.
 
 ## Building
 This is SnowFlake is require for build.
