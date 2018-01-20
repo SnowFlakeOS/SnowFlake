@@ -28,7 +28,7 @@ module LongMode
     private def clear_tables(page : UInt32)
         page_ptr : UInt32* = Pointer(UInt32).new (UInt64.new page)
 
-        i : UInt32 = UInt32.new 0;
+        i : UInt32 = UInt32.new 0
         while i < (4 * 4096) / sizeof(UInt32)
             page_ptr[i] = UInt32.new 0
             i += 1
