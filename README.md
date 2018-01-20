@@ -10,6 +10,14 @@
 
 SnowFlake, this is an Operating System written in Rust with Crystal.
 
+## TODO
+### Boot2Snow (x86_64)
+- [ ] Entering LongMode
+- [ ] FAT32 Support
+- [ ] Load Higher-half kernel
+### SnowKernel (ExoKernel)
+### FlakeOS (LibOS)
+
 ## Building
 This is SnowFlake is require for build.
 - Rust (https://www.rust-lang.org)
