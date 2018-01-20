@@ -14,6 +14,6 @@ require "./lib/fat32"
 
 fun s2main()
   Terminal.clear
-  LongMode.init # WIP
+  LongMode.init
   FAT32.init # WIP
 end
