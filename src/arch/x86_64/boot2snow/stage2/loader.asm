@@ -1,9 +1,8 @@
-; https:;github.com/anchovieshat/cathode/blob/master/stage2/load.asm
+; https://github.com/anchovieshat/cathode/blob/master/stage2/load.asm
 
 bits 16
 
 extern s2main
-global intcall
 
 section .text16
 start:
@@ -35,44 +34,6 @@ die:
 	hlt
 	jmp die
 
-intcall_bounce16:
-	mov ecx, cr0
-	and ecx, ~1
-	mov cr0, ecx
-	mov [0x7C00], esp
-	mov sp, di
-
-	jmp 0:intcall_16
-.return:
-	mov ecx, cr0
-	or ecx, 1
-	mov cr0, ecx
-	mov esp, [0x7C00]
-	jmp 0x08:prot_start
-
-intcall_16:
-  mov ax, 0
-  mov ss, ax
-	sti
-
-	;int 0x10
-
-	pop ds
-	pop es
-	pop ax
-	pop bx
-	pop cx
-	pop dx
-	pop si
-	pop di
-	pop bp
-	popf
-
-	;int 0x10
-
-	retf
-
-; {{{
 print:
 	push ax
 	push bx
@@ -86,9 +47,6 @@ print:
 	pop bx
 	pop ax
 	ret
-; }}}
-
-; {{{
 check_a20:
 	push ds
 	push es
@@ -129,7 +87,6 @@ check_a20:
 	pop ds
 	sti
 	ret
-; }}}
 
 section .text
 bits 32
@@ -151,53 +108,6 @@ prot_main:
 	call s2main
 	hlt
 	jmp $
-
-intcall:
-	push ebp
-	mov ebp, esp
-	pushfd
-	pushad
-
-	mov al, [ebp+8] ; interrupt number
-	lea esi, [ebp+12] ; RM structure
-
-	mov edi, 0x7C00 ; RM stack
-
-  ; pushing RM return address
-	o16 pushf ; FLAGS
-	pop cx
-	sub di, 2
-	mov [di], cx
-	sub di, 2
-	mov word [di], 0 ; CS
-	sub di, 2
-	mov word [di], intcall_bounce16.return
-
-  ; pushing interrupt address
-	mov dl, 4 ; 4 bytes per interrupt in IVT (cs+off)
-  mul dl ; *4
-	mov bx, ax
-	mov cx, [bx+2] ; push cs
-	sub di, 2
-	mov [di], cx
-	mov cx, [bx] ; push off
-	sub di, 2
-	mov [di], cx
-
-	sub di, 0x14 ; size of structure
-
-	mov ecx, 0x14
-	rep movsb
-
-	sub di, 0x14
-
-	call 0x18:intcall_bounce16
-
-	popad
-	popfd
-	pop ebp
-	ret
-
 
 section .rodata
 

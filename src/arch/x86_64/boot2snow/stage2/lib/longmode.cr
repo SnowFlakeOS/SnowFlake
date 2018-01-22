@@ -5,6 +5,8 @@
 #   https://opensource.org/licenses/BSD-3-Clause)
 # =======================================================================
 
+# https://github.com/wichtounet/thor-os/blob/develop/init/src/boot_32.cpp
+
 require "./terminal"
 
 module LongMode
@@ -20,8 +22,14 @@ module LongMode
         setup_paging
         log "Paging configured!"
 
-        # enable_long_mode # Crash
+        enable_long_mode
         log "Long mode enabled!"
+
+        set_pml4t
+        log "PML4T set!"
+
+        enable_paging
+        log "Paging enabled!"
     end
 
     @[AlwaysInline]
@@ -36,7 +44,10 @@ module LongMode
     end
 
     private def activate_pae
-        asm("movl %eax, %cr4;or %eax, 1 << 5; movl %cr4, %eax")
+        asm(".intel_syntax noprefix \t\n" \
+            "mov eax, cr4 \t\n" \
+            "or eax, 1 << 5 \t\n" \
+            "mov cr4, eax \t\n")
     end
 
     private def setup_paging
@@ -65,9 +76,29 @@ module LongMode
     end
 
     private def enable_long_mode
-        asm("movl %ecx, 0xC0000080 \t\n" \
+        asm(".intel_syntax noprefix \t\n" \
+            "mov ecx, 0xC0000080 \t\n" \
             "rdmsr \t\n" \
-            "or %eax, 1 << 8 \t\n" \
+            "or eax, 1 << 8 \t\n" \
             "wrmsr \t\n")
+    end
+
+    private def set_pml4t
+        asm(".intel_syntax noprefix \t\n" \
+            "mov eax, 0x70000 \t\n" \
+            "mov cr3, eax \t\n");
+    end
+
+    private def enable_paging
+        
+        # asm volatile(
+        #   "mov eax, cr0 \t\n"
+        #   "or eax, 0b10000000000000000000000000000000 \t\n"
+        #   "mov cr0, eax \t\n");
+
+        asm(".intel_syntax noprefix \t\n" \
+            "mov eax, cr0 \t\n" \
+            "or eax, 0x400000 \t\n" \
+            "mov cr0, eax \t\n");
     end
 end

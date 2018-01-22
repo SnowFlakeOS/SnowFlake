@@ -49,4 +49,8 @@ module FAT32
         # TODO
         log "FAT32 initialized!"
     end
+
+    def get
+
+    end
 end
