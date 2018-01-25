@@ -7,14 +7,15 @@
 
 # https://github.com/TheKernelCorp/NuummiteOS
 
+require "./runtime/src/prelude"
 require "./lib/terminal"
 require "./lib/longmode"
 require "./lib/serial"
-require "./lib/fat32"
+require "./lib/disks"
 
 fun s2main
   Terminal.clear
   LongMode.init
   Serial.init
-  FAT32.init # WIP
+  Disks.init # WIP
 end

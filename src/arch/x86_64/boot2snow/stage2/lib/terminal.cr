@@ -1,4 +1,5 @@
 private LOG_HEAD = "Boot2Snow"
+private SUSPEND_HEAD = "SUSPEND"
 
 def print(val : String)
   Terminal.write_string val
@@ -11,6 +12,12 @@ end
 
 def log(val : String)
   print LOG_HEAD
+  print " - "
+  puts val
+end
+
+def suspend(val : String)
+  print SUSPEND_HEAD
   print " - "
   puts val
 end

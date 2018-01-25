@@ -7,8 +7,6 @@
 
 # https://github.com/wichtounet/thor-os/blob/develop/init/src/boot_32.cpp
 
-require "../runtime/src/prelude"
-
 module Serial
     extend self
 
