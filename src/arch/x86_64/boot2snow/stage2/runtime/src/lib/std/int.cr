@@ -1,3 +1,9 @@
+{% if flag?(:x86_64) %}
+  alias USize = UInt64
+{% else %}
+  alias USize = UInt32
+{% end %}
+
 struct Int
   alias Signed = Int8 | Int16 | Int32 | Int64
   alias Unsigned = UInt8 | UInt16 | UInt32 | UInt64
@@ -113,79 +119,6 @@ struct Int
     self
   end
 
-  def upto(to, &block : self ->)
-    x = self
-    while x <= to
-      yield x
-      x += 1
-    end
-    self
-  end
-
-  def downto(to, &block : self ->)
-    x = self
-    while x >= to
-      yield x
-      x -= 1
-    end
-    self
-  end
-
-  def to(to, &block : self ->)
-    if self < to
-      upto(to) { |i| yield i }
-    elsif self > to
-      downto(to) { |i| yield i }
-    else
-      yield self
-    end
-    self
-  end
-
-  def modulo(other)
-    self % other
-  end
-
-  def divisible_by?(num : Int)
-    self % num == 0
-  end
-
-  def even?
-    divisible_by? 2
-  end
-
-  def odd?
-    !even?
-  end
-
-  def succ
-    self + 1
-  end
-
-  def pred
-    self - 1
-  end
-
-  def ceil
-    self
-  end
-
-  def floor
-    self
-  end
-
-  def round
-    self
-  end
-
-  def trunc
-    self
-  end
-
-  def hash
-    self
-  end
-
   private def check_div_argument(other)
     if other == 0
       raise "Division by zero"
@@ -210,10 +143,6 @@ struct Int8
     0_i8 - self
   end
 
-  def clone
-    self
-  end
-
   def self.zero
     0_i8
   end
@@ -231,10 +160,6 @@ struct Int16
     0_i16 - self
   end
 
-  def clone
-    self
-  end
-
   def self.zero
     0_i16
   end
@@ -249,11 +174,7 @@ struct Int32
   end
 
   def -
-    0 - self
-  end
-
-  def clone
-    self
+    0_i32 - self
   end
 
   def self.zero
@@ -273,10 +194,6 @@ struct Int64
     0_i64 - self
   end
 
-  def clone
-    self
-  end
-
   def self.zero
     0_i64
   end
@@ -291,10 +208,6 @@ struct UInt8
   end
 
   def abs
-    self
-  end
-
-  def clone
     self
   end
 
@@ -315,10 +228,6 @@ struct UInt16
     self
   end
 
-  def clone
-    self
-  end
-
   def self.zero
     0_u16
   end
@@ -336,10 +245,6 @@ struct UInt32
     self
   end
 
-  def clone
-    self
-  end
-
   def self.zero
     0_u32
   end
@@ -354,10 +259,6 @@ struct UInt64
   end
 
   def abs
-    self
-  end
-
-  def clone
     self
   end
 

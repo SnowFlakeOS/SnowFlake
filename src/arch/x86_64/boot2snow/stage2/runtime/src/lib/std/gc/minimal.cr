@@ -1,29 +1,20 @@
 # Skeleton:
-# https://github.com/crystal-lang/crystal/blob/master/src/gc/null.cr
-
-# Allocates memory.
-# TODO: Implement this properly.
-fun __crystal_malloc(size : UInt32) : Void*
-  # Heap.kalloc(size).to_void_ptr
-  Pointer(Void).null
-end
-
-# Allocates memory in a thread-safe way.
-# TODO: Implement this properly.
-fun __crystal_malloc_atomic(size : UInt32) : Void*
-  # Heap.kalloc(size).to_void_ptr
-  Pointer(Void).null
-end
-
-# Reallocates memory.
-# TODO: Implement this properly.
-fun __crystal_realloc(ptr : Void*, size : UInt32) : Void*
-  # Heap.realloc(ptr, size).to_void_ptr
-  Pointer(Void).null
-end
+# https://github.com/crystal-lang/crystal/blob/master/src/gc/none.cr
 
 module GC
   def self.init
+  end
+
+  def self.malloc(size : UInt32)
+    Heap.kalloc size
+  end
+
+  def self.malloc_atomic(size : UInt32)
+    Heap.kalloc size
+  end
+
+  def self.realloc(ptr : Void*, size : UInt32)
+    Heap.realloc ptr, size
   end
 
   def self.collect
@@ -35,8 +26,12 @@ module GC
   def self.disable
   end
 
-  def self.free(pointer : Void*)
-    raise "GC.free is not yet supported"
+  def self.free(ptr : Void*)
+    Heap.free ptr
+  end
+
+  def self.is_heap_ptr(ptr : Void*)
+    false
   end
 
   def self.add_finalizer(object)

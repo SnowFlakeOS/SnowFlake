@@ -39,6 +39,10 @@ struct Pointer(T)
     (self + offset).value = value
   end
 
+  def offset(other : Int)
+    self + other
+  end
+
   def null?
     address == 0
   end

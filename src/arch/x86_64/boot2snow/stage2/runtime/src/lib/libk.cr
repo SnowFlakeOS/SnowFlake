@@ -2,3 +2,4 @@
 require "./libk/cpuio"
 require "./libk/string"
 require "./libk/glue"
+require "./libk/heap"

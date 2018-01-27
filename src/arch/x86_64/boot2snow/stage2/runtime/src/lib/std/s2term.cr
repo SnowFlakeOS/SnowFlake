@@ -1,25 +1,25 @@
 private LOG_HEAD = "Boot2Snow"
 private SUSPEND_HEAD = "SUSPEND"
 
-def print(val : String)
+def s2print(val : String)
   Terminal.write_string val
 end
 
-def puts(val : String)
-  print val
-  print "\r\n"
+def s2println(val : String)
+  s2print val
+  s2print "\r\n"
 end
 
 def log(val : String)
-  print LOG_HEAD
-  print " - "
-  puts val
+  s2print LOG_HEAD
+  s2print " - "
+  s2println val
 end
 
 def suspend(val : String)
-  print SUSPEND_HEAD
-  print " - "
-  puts val
+  s2print SUSPEND_HEAD
+  s2print " - "
+  s2println val
 end
 
 module Terminal
@@ -52,6 +52,7 @@ module Terminal
       write_byte c[i]
       i += 1
     end
+    update_cursor @@x, @@y
   end
 
   # Writes an `UInt8` to the screen.
