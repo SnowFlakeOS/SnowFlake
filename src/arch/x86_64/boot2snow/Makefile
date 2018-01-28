@@ -1,5 +1,6 @@
 arch ?= x86_64
 LD = $(arch)-elf-ld
+OC = $(arch)-elf-objcopy
 NASM = nasm
 BUILD_DIR = ../../../../build/arch/x86_64/boot2snow
 
@@ -23,8 +24,6 @@ stage2_crystal_obj := $(patsubst stage2/%.cr, \
 
 stage2_object := $(BUILD_DIR)/stage2.bin
 
-rust_os := target/$(target)/debug/libBoot2Snow.a
-
 .PHONY: all
 
 all: $(stage1_object) $(stage2_object)
@@ -36,14 +35,17 @@ $(stage1_object): $(stage1_source)
 
 # compile stage2
 $(stage2_object): $(stage2_asm_obj) $(stage2_crystal_obj)
-	@$(LD) --ignore-unresolved-symbol _GLOBAL_OFFSET_TABLE_ -T $(linker_script) -o $@ $(stage2_asm_obj) $(stage2_crystal_obj).o
+	@$(LD) --ignore-unresolved-symbol _GLOBAL_OFFSET_TABLE_ -T $(linker_script) -o $@.o $(stage2_asm_obj) $(stage2_crystal_obj)
+	@$(OC) -R .note -R .comment -O binary --set-section-flags .bss=alloc,load,contents $@.o $@
 
 # compile stage2 asm files
 $(BUILD_DIR)/stage2/asm/%.o: stage2/%.asm
 	@mkdir -p $(shell dirname $@)
-	@$(NASM) -f elf $< -o $@
+	@$(NASM) -f elf $< -o $@.o
+	$(OC) -I elf32-i386 -O elf64-x86-64 $@.o $@
 
 # compile stage2 crystal files
 $(BUILD_DIR)/stage2/crystal/%.o: stage2/%.cr
 	@mkdir -p $(shell dirname $@)
 	@$(CRYSTAL) build $(CRYSTALFLAGS) -o $@ $<
+	$(OC) -I elf32-i386 -O elf64-x86-64 $@.o $@
