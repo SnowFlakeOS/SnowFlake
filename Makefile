@@ -1,13 +1,8 @@
 arch ?= x86_64
 target ?= $(arch)-snowflake
-entry := build/entry-$(arch).o
-kernel := build/kernel-$(arch).elf
+boot2snow := build/arch/$(arch)/boot2snow/bootx64.efi
+kernel := build/kernel/kernel.bin
 img := build/snowflake-$(arch).img
-rust_os := target/$(target)/debug/libSnowFlake.a
-
-linker_script := src/arch/$(arch)/linker.ld
-
-entry_source_file := src/arch/$(arch)/entry.asm
 
 CARGO = cargo
 NASM = nasm
@@ -24,25 +19,24 @@ clean:
 	@rm -r build #target
 
 run: $(img)
-	@qemu-system-x86_64 -enable-kvm -cpu host -serial file:virtual.log -vga std -hda $(img)
+	@qemu-system-x86_64 -m 1024 -bios ovmf.fd $(img)
 
 img: $(img)
 
 $(img): #$(kernel)
-	@make -C src/arch/x86_64/boot2snow
-	@dd if=/dev/zero of=$(img) bs=1M count=10
-	@mkfs.vfat -F32 $(img)
-	@dd if=build/arch/$(arch)/boot2snow/stage1.bin of=$(img) conv=notrunc bs=1 count=420 seek=90
-	@mcopy -D o -D O -ni $(img) build/arch/$(arch)/boot2snow/stage2.bin ::/stage2.bin
-	#@mkisofs -R -J -c boot/bootcat -b boot/boot.bin -no-emul-boot -boot-load-size 4 -o $(iso) ./build/iso
-
-$(entry):
-	@mkdir -p $(shell dirname $@)
-	@$(NASM) -f elf64 $(entry_source_file) -o $(entry)
-
-$(kernel): $(entry) cargo $(rust_os) $(linker_script)
-	@$(LD) -n --gc-sections -T $(linker_script) -o $(kernel) $(entry) $(rust_os) -z max-page-size=0x1000
-
-# compile kernel files
-cargo:
-	xargo build --target $(target)
+	@make -C arch/$(arch)/boot2snow
+	@make -C kernel
+	@dd if=/dev/zero of=$(img).2 bs=512 count=98304
+	@mkfs.vfat $(img).2
+	@mmd -i $(img).2 ::/boot2snow
+	@mmd -i $(img).2 ::/efi
+	@mmd -i $(img).2 ::/efi/boot
+	@mcopy -i $(img).2 $(kernel) ::/boot2snow
+	@mcopy -i $(img).2 splash.bmp ::/boot2snow
+	@mcopy -i $(img).2 $(boot2snow) ::/efi/boot
+	dd if=/dev/zero of=$@.tmp bs=512 count=100352
+	parted $@.tmp -s -a minimal mklabel gpt
+	parted $@.tmp -s -a minimal mkpart EFI FAT16 2048s 93716s
+	parted $@.tmp -s -a minimal toggle 1 boot
+	dd if=$@.2 of=$@.tmp bs=512 count=98304 seek=2048 conv=notrunc
+	mv $@.tmp $@

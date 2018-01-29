@@ -1,0 +1,17 @@
+[package]
+name = "Boot2Snow"
+version = "0.1.0"
+authors = ["xuserwhat <quicknshell@gmail.com>"]
+
+[dependencies.compiler_builtins]
+git = "https://github.com/rust-lang-nursery/compiler-builtins"
+features = ["mem"]
+
+[dependencies]
+uefi_alloc = { git = "https://github.com/redox-os/uefi_alloc.git" }
+uefi = { git = "https://github.com/SnowFlakeOS/uefi.git" }
+orbclient = { git = "https://github.com/redox-os/orbclient.git", branch = "no_std" }
+
+[lib]
+name = "Boot2Snow"
+crate-type = ["staticlib"]

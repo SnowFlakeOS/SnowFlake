@@ -68,3 +68,6 @@ $ make run
 - https://github.com/wichtounet/thor-os
 - https://github.com/anchovieshat/cathode
 - https://github.com/TheKernelCorp/NuummiteOS
+- https://github.com/redox-os/orbclient
+- https://github.com/redox-os/uefi
+- https://github.com/system76/firmware-update
