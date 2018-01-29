@@ -37,7 +37,7 @@ pub struct ElfHeader {
 }
 impl ElfHeader {
 	pub fn check_header(&self) {
-		assert_eq!(&self.e_ident[..8], b"\x7FELF\x02\x01\x01\x00");	// Elf32, LSB, Version, Pad
+		assert_eq!(&self.e_ident[..8], b"\x7FELF\x01\x01\x01\x00");	// Elf32, LSB, Version, Pad
 		assert_eq!(self.e_version, 1);
 	}
 }

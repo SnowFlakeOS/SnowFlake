@@ -80,16 +80,14 @@ pub fn init() -> Result<()> {
     }
 
     {
-        let mut kernel_file = match find("\\boot2snow\\kernel.bin") {
+        let mut kernel_file = match find("\\boot2snow\\kernel-amd64.bin") {
             Ok(k) => k,
             Err(e) => panic!("Sorry, Failed to open kernel :(")
         };
 
         let elf_hdr = {
 		    let mut hdr = elf::ElfHeader::default();
-		    // SAFE: Converts to POD for read
             kernel_file.1.read(unsafe { ::core::slice::from_raw_parts_mut( &mut hdr as *mut _ as *mut u8, size_of::<elf::ElfHeader>() ) });
-            // TODO: Read kernel to ELF
 		    hdr
         };
 
@@ -98,6 +96,13 @@ pub fn init() -> Result<()> {
         for i in 0 .. elf_hdr.e_phnum
 	    {
             let mut ent = elf::PhEnt::default();
+
+            kernel_file.1.set_position(elf_hdr.e_phoff as u64 + (i as usize * size_of::<elf::PhEnt>()) as u64 );
+            kernel_file.1.read( unsafe { ::core::slice::from_raw_parts_mut( &mut ent as *mut _ as *mut u8, size_of::<elf::PhEnt>() ) } );
+
+        	if ent.p_type == 1{
+                let mut addr = ent.p_paddr as u64;
+            }
         }
 
         status_msg(&mut display, splash.height(), "Kernel loaded");

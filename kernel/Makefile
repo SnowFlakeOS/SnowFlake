@@ -12,7 +12,7 @@ CARGO = xargo
 BUILD_DIR = ../build/kernel
 
 linker_script = ../arch/$(arch)/linker.ld
-kernel = $(BUILD_DIR)/kernel.bin
+kernel = $(BUILD_DIR)/kernel-amd64.bin
 kernel_obj = $(BUILD_DIR)/target/$(target_arch)/release/libSnowKernel.a
 
 .PHONY: all
@@ -21,8 +21,9 @@ all: $(kernel)
 
 $(kernel): $(kernel_obj)
 	@mkdir -p $(shell dirname $@)
-	@$(LD) -n --gc-sections -T $(linker_script) -o $@ $(BUILD_DIR)/start.o $< -z max-page-size=0x1000
-	@$(OBJDUMP) -d $@ > $@.dsm
+	@$(LD) -n --gc-sections -T $(linker_script) -o $@.tmp $(BUILD_DIR)/start.o $< -z max-page-size=0x1000
+	@$(OBJDUMP) -d $@.tmp > $@.dsm
+	@$(OBJCOPY) $@.tmp -F elf32-i386 $@
 	@$(STRIP) -g $@
 
 $(kernel_obj):

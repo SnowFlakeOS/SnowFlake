@@ -60,6 +60,16 @@ impl File {
         (self.0.Write)(self.0, &mut len, buf.as_ptr())?;
         Ok(len)
     }
+
+    pub fn get_position(&mut self) -> Result<u64> {
+        let mut pos = 0;
+		(self.0.GetPosition)(self.0, &mut pos)?;
+        Ok(pos)
+    }
+
+    pub fn set_position(&mut self, pos: u64) {
+        (self.0.SetPosition)(self.0, pos);
+    }
 }
 
 impl Drop for File {
