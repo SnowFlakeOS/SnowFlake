@@ -8,13 +8,12 @@
 
 [li]: LICENSE
 
-SnowFlake, this is an Operating System written in Rust with Crystal.
+SnowFlake, this is an Operating System written in Rust.
 
 ## TODO
-### Boot2Snow (x86_64)
-- [x] Entering LongMode
-- [ ] FAT32 Support
-- [ ] Load Higher-half kernel
+### Boot2Snow (x86_64, UEFI)
+- [x] Basical UI (from https://github.com/system76/firmware-update)
+- [ ] Load kernel from disk
 ### SnowKernel (ExoKernel)
 ### FlakeOS (LibOS)
 
@@ -23,7 +22,6 @@ This is SnowFlake is require for build.
 - Rust (https://www.rust-lang.org)
 - NASM (http://www.nasm.us/)
 - GCC Toolchain or GCC (https://gcc.gnu.org/)
-- Crystal (https://crystal-lang.org)
 
 ### Windows
 Will be added later
