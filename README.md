@@ -53,7 +53,7 @@ $ sh x86_64-linux_env.sh
 ```
 #### Arch Linux
 ```
-$ pacman -S qemu nasm crystal
+$ pacman -S qemu nasm mtools
 $ git clone https://github.com/SnowFlake/SnowFlake.git
 $ cd SnowWhite
 $ make run
