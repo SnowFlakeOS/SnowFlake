@@ -7,7 +7,7 @@ use uefi::reset::ResetType;
 use uefi::status::{Error, Result, Status};
 
 use display::{Display, Output};
-use fs::{find, load};
+use fs::{File, Dir, find, load};
 use image::{self, Image};
 use io::wait_key;
 use proto::Protocol;
@@ -80,19 +80,27 @@ pub fn init() -> Result<()> {
     }
 
     {
-        if let Ok(data) = load("\\boot2snow\\kernel.bin") {
-            let elf_hdr = {
-		        let mut hdr = elf::ElfHeader::default();
-		        // SAFE: Converts to POD for read
-                let mut data = unsafe { ::core::slice::from_raw_parts_mut( &mut hdr as *mut _ as *mut u8, size_of::<elf::ElfHeader>() ) };
-                // TODO: Read kernel to ELF
-		        hdr
-            };
+        let mut kernel_file = match find("\\boot2snow\\kernel.bin") {
+            Ok(k) => k,
+            Err(e) => panic!("Sorry, Failed to open kernel :(")
+        };
 
-            status_msg(&mut display, splash.height(), "Kernel loaded");
-        } else {
-            panic!("Sorry, Failed to open kernel :(");
+        let elf_hdr = {
+		    let mut hdr = elf::ElfHeader::default();
+		    // SAFE: Converts to POD for read
+            kernel_file.1.read(unsafe { ::core::slice::from_raw_parts_mut( &mut hdr as *mut _ as *mut u8, size_of::<elf::ElfHeader>() ) });
+            // TODO: Read kernel to ELF
+		    hdr
+        };
+
+        elf_hdr.check_header();
+
+        for i in 0 .. elf_hdr.e_phnum
+	    {
+            let mut ent = elf::PhEnt::default();
         }
+
+        status_msg(&mut display, splash.height(), "Kernel loaded");
     }
 
     Ok(())

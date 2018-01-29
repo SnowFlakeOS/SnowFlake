@@ -21,8 +21,9 @@ all: $(kernel)
 
 $(kernel): $(kernel_obj)
 	@mkdir -p $(shell dirname $@)
-	$(LD) -n --gc-sections -T $(linker_script) -o $@ $(BUILD_DIR)/start.o $< -z max-page-size=0x1000
+	@$(LD) -n --gc-sections -T $(linker_script) -o $@ $(BUILD_DIR)/start.o $< -z max-page-size=0x1000
 	@$(OBJDUMP) -d $@ > $@.dsm
+	@$(STRIP) -g $@
 
 $(kernel_obj):
 	@mkdir -p $(shell dirname $@)
