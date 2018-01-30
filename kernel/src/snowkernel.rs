@@ -7,7 +7,6 @@ use uefi::reset::ResetType;
 use uefi::status::{Error, Result, Status};
 use uefi::boot::BootServices;
 
-use exec::exec_path;
 use display::{Display, Output};
 use fs::{File, Dir, find, load};
 use image::{self, Image};
@@ -74,10 +73,8 @@ pub fn init() -> Result<()> {
 
         display.sync();
 
-        status_msg(&mut display, splash.height(), concat!("Boot2Snow ", env!("CARGO_PKG_VERSION")));
+        status_msg(&mut display, splash.height(), &format!("SnowKernel {} is loaded", env!("CARGO_PKG_VERSION")));
     }
-
-    exec_path("\\boot2snow\\kernel.bin", &[""]);
 
     Ok(())
 }

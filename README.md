@@ -1,6 +1,4 @@
-<img align="left" width="64px" src="logo.png" />
-
-# SnowFlake
+# ![SnowFlake](./logo.png)
 
 [![BSD-3-Clause][s1]][li]
 
@@ -8,13 +6,19 @@
 
 [li]: LICENSE
 
-SnowFlake, this is an Operating System written in Rust.
+Technology is free, SnowFlakeOS
 
 ## TODO
 ### Boot2Snow (x86_64, UEFI)
 - [x] Basical UI (from https://github.com/system76/firmware-update)
-- [ ] Load kernel from disk
+- [x] Load kernel from disk
 ### SnowKernel (ExoKernel)
+- [ ] Load kernel as higher half (0xffffffff80000000)
+- [ ] Better GUI library support
+- [ ] Write I/O drivers (keyboard, mouse, etc.)
+- [ ] Multitasking support
+- [ ] Write syscall
+- [ ] Write init process
 ### FlakeOS (LibOS)
 
 ## Building

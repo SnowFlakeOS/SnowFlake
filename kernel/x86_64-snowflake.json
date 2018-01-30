@@ -1,14 +1,17 @@
-
 {
-  "llvm-target": "x86_64-unknown-none",
-  "data-layout": "e-m:e-i64:64-f80:128-n8:16:32:64-S128",
-  "linker-flavor": "gcc",
-  "target-endian": "little",
-  "target-pointer-width": "64",
-  "target-c-int-width": "32",
-  "arch": "x86_64",
-  "os": "none",
-  "disable-redzone": true,
-  "features": "-mmx,-sse,+soft-float",
-  "panic-strategy": "abort"
+	"cpu": "x86-64",
+	"data-layout": "e-m:w-i64:64-f80:128-n8:16:32:64-S128",
+	"llvm-target": "x86_64-pc-windows-gnu",
+	"target-endian": "little",
+	"target-pointer-width": "64",
+	"target-word-size": "64",
+	"target-c-int-width": "32",
+	"os": "snowflake",
+	"arch": "x86_64",
+		"pre-link-args": [],
+		"no-compiler-rt": true,
+		"disable-redzone": true,
+		"eliminate-frame-pointer": false,
+	"linker-flavor": "ld",
+	"morestack": false
 }

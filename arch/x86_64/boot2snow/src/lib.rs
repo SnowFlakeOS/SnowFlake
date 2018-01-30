@@ -57,6 +57,4 @@ fn main() {
         println!("Init error: {:?}", err);
         let _ = io::wait_key();
 	}
-
-    loop {}
 }

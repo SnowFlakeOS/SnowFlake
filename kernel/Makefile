@@ -1,18 +1,17 @@
 arch ?= x86_64
 target_arch ?= $(arch)-snowflake
 
-LD = $(arch)-elf-ld
-AS = $(arch)-elf-as
-AR = $(arch)-elf-ar
-STRIP = $(arch)-elf-strip
-OBJDUMP = $(arch)-elf-objdump
-OBJCOPY = $(arch)-elf-objcopy
+LD = $(arch)-efi-pe-ld
+AS = $(arch)-efi-pe-as
+AR = $(arch)-efi-pe-ar
+STRIP = $(arch)-efi-pe-strip
+OBJDUMP = $(arch)-efi-pe-objdump
 CARGO = xargo
 
 BUILD_DIR = ../build/kernel
 
 linker_script = ../arch/$(arch)/linker.ld
-kernel = $(BUILD_DIR)/kernel-amd64.bin
+kernel = $(BUILD_DIR)/kernel.bin
 kernel_obj = $(BUILD_DIR)/target/$(target_arch)/release/libSnowKernel.a
 
 .PHONY: all
@@ -21,12 +20,29 @@ all: $(kernel)
 
 $(kernel): $(kernel_obj)
 	@mkdir -p $(shell dirname $@)
-	@$(LD) -n --gc-sections -T $(linker_script) -o $@.tmp $(BUILD_DIR)/start.o $< -z max-page-size=0x1000
-	@$(OBJDUMP) -d $@.tmp > $@.dsm
-	@$(OBJCOPY) $@.tmp -F elf32-i386 $@
-	@$(STRIP) -g $@
+	@$(LD) \
+		-T $(linker_script) \
+		--oformat pei-x86-64 \
+		--dll \
+		--image-base 0 \
+		--section-alignment 32 \
+		--file-alignment 32 \
+		--major-os-version 0 \
+		--minor-os-version 0 \
+		--major-image-version 0 \
+		--minor-image-version 0 \
+		--major-subsystem-version 0 \
+		--minor-subsystem-version 0 \
+		--subsystem 10 \
+		--heap 0,0 \
+		--stack 0,0 \
+		--pic-executable \
+		--entry _start \
+		--no-insert-timestamp \
+		$< -o $@
+	@$(OBJDUMP) -d $@ > $@.dsm
+	@$(STRIP) $@
 
 $(kernel_obj):
 	@mkdir -p $(shell dirname $@)
-	@make -C ../arch/x86_64/init
 	@RUST_TARGET_PATH=$(abspath .) CARGO_TARGET_DIR=$(BUILD_DIR)/target $(CARGO) build --target $(target_arch) --release

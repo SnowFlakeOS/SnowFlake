@@ -43,7 +43,7 @@ impl Display {
             w: w,
             h: h,
             data: vec![Color::rgb(0, 0, 0); w as usize * h as usize].into_boxed_slice(),
-            font: include_bytes!("../../../../res/unifont.font"),
+            font: include_bytes!("../../res/unifont.font"),
         }
     }
 

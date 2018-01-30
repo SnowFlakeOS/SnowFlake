@@ -1,7 +1,7 @@
 arch ?= x86_64
 target ?= $(arch)-snowflake
 boot2snow := build/arch/$(arch)/boot2snow/bootx64.efi
-kernel := build/kernel/kernel-amd64.bin
+kernel := build/kernel/kernel.bin
 img := build/snowflake-$(arch).img
 
 CARGO = cargo
