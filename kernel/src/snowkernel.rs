@@ -66,7 +66,7 @@ pub fn init() -> Result<()> {
         display.set(bg);
 
         {
-            let x = (display.width() as i32 - splash.width() as i32) /2;
+            let x = (display.width() as i32 - splash.width() as i32) / 2;
             let y = ((display.height() as i32 - splash.height() as i32) / 2) as i32 - 16;
             splash.draw(&mut display, x, y);
         }
@@ -74,6 +74,28 @@ pub fn init() -> Result<()> {
         display.sync();
 
         status_msg(&mut display, splash.height(), &format!("SnowKernel {} is loaded", env!("CARGO_PKG_VERSION")));
+    }
+
+    {
+        let radius = -30 as i32;
+        let mut x = (display.width() as i32) + (radius + (radius as f32 / 1.75) as i32);
+        let mut y = (display.height() as i32) + (radius + (radius as f32 / 1.75) as i32);
+
+        display.circle(x, y, radius, Color::rgb(0x61, 0x61, 0x61));
+        display.arc(x, y, radius, 160, Color::rgb(0xff, 0xff, 0xff));
+        display.circle(x, y, (radius as f32 / 1.075) as i32, Color::rgb(0x00, 0x00, 0x00));
+
+        let prompt = "25%";
+
+        x -= (prompt.len() * 4) as i32;
+        y -= (prompt.len() as f32 * 2.5) as i32;
+
+        for c in prompt.chars() {
+            display.char(x, y, c, Color::rgb(0xff, 0xff, 0xff));
+            x += 8;
+        }
+
+        display.sync();
     }
 
     Ok(())
