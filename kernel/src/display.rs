@@ -184,7 +184,6 @@ impl Display {
         let mut x = 1;
         let mut y = radius.abs();
         let mut distance = 0;
-        let mut err = 0;
 
         if filled {
             self.inner_line(x0, radius + y0, x0, -radius + y0, color);
