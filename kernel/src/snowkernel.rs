@@ -51,72 +51,66 @@ pub fn init() -> Result<()> {
         Display::new(output)
     };
 
-    let mut splash = Image::new(0, 0);
+    let mut only_logo = Image::new(0, 0);
     {
-        if let Ok(data) = load("\\boot2snow\\splash.bmp") {
+        if let Ok(data) = load("\\boot2snow\\only_logo.bmp") {
             if let Ok(image) = image::bmp::parse(&data) {
-                splash = image;
+                only_logo = image;
+            }
+        }
+    }
+
+    let mut full_logo = Image::new(0, 0);
+    {
+        if let Ok(data) = load("\\boot2snow\\full_logo.bmp") {
+            if let Ok(image) = image::bmp::parse(&data) {
+                full_logo = image;
             }
         }
     }
 
     {
-        let bg = Color::rgb(0x00, 0x00, 0x00);
-
-        display.set(bg);
-
-        {
-            let x = (display.width() as i32 - splash.width() as i32) / 2;
-            let y = ((display.height() as i32 - splash.height() as i32) / 2) as i32 - 16;
-            splash.draw(&mut display, x, y);
-        }
+        let x = (display.width() as i32 - only_logo.width() as i32) / 2;
+        let y = ((display.height() as i32 - only_logo.height() as i32) / 2) as i32 - 32;
+        only_logo.draw(&mut display, x, y);
 
         display.sync();
-
-        status_msg(&mut display, splash.height(), &format!("SnowKernel {} is loaded", env!("CARGO_PKG_VERSION")));
     }
+
+    update_progressbar(&mut display, only_logo.height(), 5, 50);
 
     {
-        let radius = -30 as i32;
-        let mut x = (display.width() as i32) + (radius + (radius as f32 / 1.75) as i32);
-        let mut y = (display.height() as i32) + (radius + (radius as f32 / 1.75) as i32);
-
-        display.circle(x, y, radius, Color::rgb(0x61, 0x61, 0x61));
-        display.arc(x, y, radius, 160, Color::rgb(0xff, 0xff, 0xff));
-        display.circle(x, y, (radius as f32 / 1.075) as i32, Color::rgb(0x00, 0x00, 0x00));
-
-        let prompt = "25%";
-
-        x -= (prompt.len() * 4) as i32;
-        y -= (prompt.len() as f32 * 2.5) as i32;
-
-        for c in prompt.chars() {
-            display.char(x, y, c, Color::rgb(0xff, 0xff, 0xff));
-            x += 8;
-        }
+        let x = (display.width() as i32 - full_logo.width() as i32) / 2;
+        let y = ((display.height() as i32 - full_logo.height() as i32) / 2) as i32 - 32;
+        full_logo.draw(&mut display, x, y);
 
         display.sync();
     }
+
+    update_progressbar(&mut display, only_logo.height(), 50, 100);
 
     Ok(())
 }
 
-fn status_msg(display: &mut Display, splash_height: u32, msg: &str) {
-    let prompt = msg.clone();
-    let mut x = (display.width() as i32 - prompt.len() as i32 * 8) / 2;
-    let y = ((display.height() as i32 - splash_height as i32) / 2) as i32 + 256;
-    
-    let rect_x = 0;
-    let rect_y = (y - 16);
-    let rect_width = display.width();
-    let rect_height = (y + 16) as u32;
+fn update_progressbar(display: &mut Display, splash_height: u32, start_progress: u8, stop_progress: u8) {
+    // TODO: Animation here
+    let progress = start_progress;
 
-    display.rect(rect_x, rect_y, rect_width, rect_height, Color::rgb(0x00, 0x00, 0x00));
-
-    for c in prompt.chars() {
-        display.char(x, y, c, Color::rgb(0xff, 0xff, 0xff));
-        x += 8;
+    for progress in start_progress..stop_progress {
+        _progressbar(display, splash_height, progress);
     }
+}
+
+fn _progressbar(display: &mut Display, splash_height: u32, progress: u8) {
+    let width = display.width() as f32 / 3.5;
+
+    let rect_width = ((width / 100.0) * progress as f32) as u32;
+    let rect_height = 10 as u32;
+
+    let x = (display.width() as i32 / 2) - width as i32 / 2;
+    let y = ((display.height() as i32 + splash_height as i32) / 2) as i32;
+
+    display.rounded_rect(x, y, rect_width, rect_height, 3, true, Color::rgb(0xff, 0xff, 0xff));
 
     display.sync();
 }

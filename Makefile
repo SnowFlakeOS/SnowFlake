@@ -26,17 +26,18 @@ img: $(img)
 $(img): #$(kernel)
 	@make -C arch/$(arch)/boot2snow
 	@make -C kernel
-	@dd if=/dev/zero of=$(img).2 bs=512 count=98304
-	@mkfs.vfat $(img).2
-	@mmd -i $(img).2 ::/boot2snow
-	@mmd -i $(img).2 ::/efi
-	@mmd -i $(img).2 ::/efi/boot
-	@mcopy -i $(img).2 $(kernel) ::/boot2snow
-	@mcopy -i $(img).2 splash.bmp ::/boot2snow
-	@mcopy -i $(img).2 $(boot2snow) ::/efi/boot
-	dd if=/dev/zero of=$@.tmp bs=512 count=100352
-	parted $@.tmp -s -a minimal mklabel gpt
-	parted $@.tmp -s -a minimal mkpart EFI FAT16 2048s 93716s
-	parted $@.tmp -s -a minimal toggle 1 boot
-	dd if=$@.2 of=$@.tmp bs=512 count=98304 seek=2048 conv=notrunc
-	mv $@.tmp $@
+	@dd if=/dev/zero of=$(img).tmp bs=512 count=98304
+	@/usr/sbin/mkfs.vfat $(img).tmp
+	@mmd -i $(img).tmp ::/boot2snow
+	@mmd -i $(img).tmp ::/efi
+	@mmd -i $(img).tmp ::/efi/boot
+	@mcopy -i $(img).tmp $(kernel) ::/boot2snow
+	@mcopy -i $(img).tmp only_logo.bmp ::/boot2snow
+	@mcopy -i $(img).tmp full_logo.bmp ::/boot2snow
+	@mcopy -i $(img).tmp $(boot2snow) ::/efi/boot
+	@dd if=/dev/zero of=$@ bs=512 count=100352
+	@/usr/sbin/parted $@ -s -a minimal mklabel gpt
+	@/usr/sbin/parted $@ -s -a minimal mkpart EFI FAT32 2048s 93716s
+	@/usr/sbin/parted $@ -s -a minimal toggle 1 boot
+	@dd if=$@.tmp of=$@ bs=512 count=98304 seek=2048 conv=notrunc
+	@rm -rf $@.tmp

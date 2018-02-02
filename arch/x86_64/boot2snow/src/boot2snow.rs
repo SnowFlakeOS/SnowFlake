@@ -54,7 +54,7 @@ pub fn init() -> Result<()> {
 
     let mut splash = Image::new(0, 0);
     {
-        if let Ok(data) = load("\\boot2snow\\splash.bmp") {
+        if let Ok(data) = load("\\boot2snow\\only_logo.bmp") {
             if let Ok(image) = image::bmp::parse(&data) {
                 splash = image;
             }
@@ -68,7 +68,7 @@ pub fn init() -> Result<()> {
 
         {
             let x = (display.width() as i32 - splash.width() as i32) /2;
-            let y = ((display.height() as i32 - splash.height() as i32) / 2) as i32 - 16;
+            let y = ((display.height() as i32 - splash.height() as i32) / 2) as i32 - 32;
             splash.draw(&mut display, x, y);
         }
 

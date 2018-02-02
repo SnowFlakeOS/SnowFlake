@@ -152,6 +152,80 @@ impl Display {
             }
         }
     }
+
+    /// Draw a line
+    fn inner_line(&mut self, argx1: i32, argy1: i32, argx2: i32, argy2: i32, color: Color) {
+        let mut x = argx1;
+        let mut y = argy1;
+
+        let dx = if argx1 > argx2 { argx1 - argx2 } else { argx2 - argx1 };
+        let dy = if argy1 > argy2 { argy1 - argy2 } else { argy2 - argy1 };
+
+        let sx = if argx1 < argx2 { 1 } else { -1 };
+        let sy = if argy1 < argy2 { 1 } else { -1 };
+
+        let mut err = if dx > dy { dx } else {-dy} / 2;
+        let mut err_tolerance;
+
+        loop {
+            self.inner_pixel(x, y, color);
+
+            if x == argx2 && y == argy2 { break };
+
+            err_tolerance = 2 * err;
+
+            if err_tolerance > -dx { err -= dy; x += sx; }
+            if err_tolerance < dy { err += dx; y += sy; }
+        }
+    }
+
+    /// Draw a circle. Negative radius will fill in the inside
+    pub fn inner_circle(&mut self, x0: i32, y0: i32, radius: i32, filled: bool, color: Color) {
+        let mut x = 1;
+        let mut y = radius.abs();
+        let mut distance = 0;
+        let mut err = 0;
+
+        if filled {
+            self.inner_line(0 + x0, radius + y0, 0 + x0, -radius + y0, color);
+            self.inner_line(radius + x0, 0 + y0, -radius + x0, 0 + y0, color);
+        } else {
+            self.inner_pixel(0 + x0, radius + y0, color);
+            self.inner_pixel(0 + x0, -radius + y0, color);
+            self.inner_pixel(radius + x0, 0 + y0, color);
+            self.inner_pixel(-radius + x0, 0 + y0, color);
+        }
+
+        distance = -radius;
+
+        while x <= y {
+            distance += (x << 1) - 1;
+
+            if distance >= 0 {
+                y -= 1;
+
+                distance += (-y << 1) + 2;
+            }
+
+            if filled {
+                self.inner_line(-x + x0, y + y0, x + x0, y + y0, color);
+                self.inner_line(-x + x0, -y + y0, x + x0, -y + y0, color);
+                self.inner_line(-y + x0, x + y0, y + x0, x + y0, color);
+                self.inner_line(-y + x0, -x + y0, y + x0, -x + y0, color);
+            } else {
+                self.inner_pixel(x + x0, y + y0, color);
+                self.inner_pixel(x + x0, -y + y0, color);
+                self.inner_pixel(-x + x0, y + y0, color);
+                self.inner_pixel(-x + x0, -y + y0, color);
+                self.inner_pixel(y + x0, x + y0, color);
+                self.inner_pixel(y + x0, -x + y0, color);
+                self.inner_pixel(-y + x0, x + y0, color);
+                self.inner_pixel(-y + x0, -x + y0, color);
+            }
+
+            x += 1;
+        }
+    }
 }
 
 impl Renderer for Display {
@@ -221,40 +295,6 @@ impl Renderer for Display {
         let w = self.width();
         let h = self.height();
         self.rect(0, 0, w, h, color);
-    }
-
-    /// Draw a circle. Negative radius will fill in the inside
-    fn circle(&mut self, x0: i32, y0: i32, radius: i32, color: Color) {
-        let mut x = radius.abs();
-        let mut y = 0;
-        let mut err = 0;
-
-        while x >= y {
-            if radius < 0 {
-                self.rect(x0 - x, y0 + y, x as u32 * 2 + 1, 1, color);
-                self.rect(x0 - y, y0 + x, y as u32 * 2 + 1, 1, color);
-                self.rect(x0 - x, y0 - y, x as u32 * 2 + 1, 1, color);
-                self.rect(x0 - y, y0 - x, y as u32 * 2 + 1, 1, color);
-            } else if radius == 0 {
-                self.pixel(x0, y0, color);
-            } else {
-                self.pixel(x0 - x, y0 + y, color);
-                self.pixel(x0 + x, y0 + y, color);
-                self.pixel(x0 - y, y0 + x, color);
-                self.pixel(x0 + y, y0 + x, color);
-                self.pixel(x0 - x, y0 - y, color);
-                self.pixel(x0 + x, y0 - y, color);
-                self.pixel(x0 - y, y0 - x, color);
-                self.pixel(x0 + y, y0 - x, color);
-            }
-
-            y += 1;
-            err += 1 + 2*y;
-            if 2*(err-x) + 1 > 0 {
-                x -= 1;
-                err += 1 - 2*x;
-            }
-        }
     }
 
     /// Draw a line
