@@ -187,13 +187,13 @@ impl Display {
         let mut err = 0;
 
         if filled {
-            self.inner_line(0 + x0, radius + y0, 0 + x0, -radius + y0, color);
-            self.inner_line(radius + x0, 0 + y0, -radius + x0, 0 + y0, color);
+            self.inner_line(x0, radius + y0, x0, -radius + y0, color);
+            self.inner_line(radius + x0, y0, -radius + x0, y0, color);
         } else {
-            self.inner_pixel(0 + x0, radius + y0, color);
-            self.inner_pixel(0 + x0, -radius + y0, color);
-            self.inner_pixel(radius + x0, 0 + y0, color);
-            self.inner_pixel(-radius + x0, 0 + y0, color);
+            self.inner_pixel(x0, radius + y0, color);
+            self.inner_pixel(x0, -radius + y0, color);
+            self.inner_pixel(radius + x0, y0, color);
+            self.inner_pixel(-radius + x0, y0, color);
         }
 
         distance = -radius;
