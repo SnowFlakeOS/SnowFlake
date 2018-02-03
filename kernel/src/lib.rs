@@ -14,6 +14,7 @@ extern crate compiler_builtins;
 extern crate uefi;
 extern crate uefi_alloc;
 extern crate orbclient;
+extern crate x86;
 
 use core::ptr;
 use uefi::reset::ResetType;

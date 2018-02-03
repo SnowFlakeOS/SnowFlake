@@ -3,8 +3,13 @@ use uefi;
 use uefi_alloc;
 
 use uefi::status::Result;
+use x86::bits64::paging::*;
+use uefi::runtime::RuntimeServices;
+use uefi::memory::{PhysicalAddress, MemoryDescriptor};
 
 use main;
+
+#[link_section=".init"]
 
 fn set_max_mode(output: &mut uefi::text::TextOutput) -> Result<()> {
     let mut max_i = None;
@@ -42,6 +47,8 @@ pub extern "win64" fn _start(handle: uefi::Handle, uefi: &'static mut uefi::syst
 
         uefi_alloc::init(::core::mem::transmute(&mut *::UEFI));
     }
+
+    unsafe { (uefi.BootServices.ExitBootServices)(handle, 0) };
 
     main();
 
