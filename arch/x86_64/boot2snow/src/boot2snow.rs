@@ -6,6 +6,7 @@ use orbclient::{Color, Renderer};
 use uefi::reset::ResetType;
 use uefi::status::{Error, Result, Status};
 use uefi::boot::BootServices;
+use uefi::memory::{MemoryType, MemoryDescriptor, VirtualAddress};
 
 use exec::exec_path;
 use display::{Display, Output};
@@ -76,6 +77,53 @@ pub fn init() -> Result<()> {
 
         status_msg(&mut display, splash.height(), concat!("Boot2Snow ", env!("CARGO_PKG_VERSION")));
     }
+
+    let (map_size, map_key, ent_size, ent_ver, map) = { 
+        let mut map_size = 0;
+		let mut map_key = 0;
+		let mut ent_size = 0;
+        let mut ent_ver = 0;
+
+        unsafe { (uefi.BootServices.GetMemoryMap)(&mut map_size, ::core::ptr::null_mut(), &mut map_key, &mut ent_size, &mut ent_ver) };
+
+	    let mut map;
+
+	    loop {
+            map = uefi.BootServices.AllocatePoolVec( ::uefi::memory::MemoryType::EfiLoaderData, map_size / ent_size );
+            match unsafe { (uefi.BootServices.GetMemoryMap)(&mut map_size, map.as_mut_ptr(), &mut map_key, &mut ent_size, &mut ent_ver) } {
+				::uefi::status::Status(0) => break,
+				::uefi::status::Status(5) => continue,
+				e => panic!("GetMemoryMap() Failed :( - {:?}", e)
+            }
+        }
+
+        unsafe {
+			map.set_len( map_size / ent_size );
+        }
+
+        (map_size, map_key, ent_size, ent_ver, map)
+    };
+
+    let mut map_tmp = unsafe { map.ptr.as_ptr() };
+
+    unsafe { for i in 0..map.len {
+        if (*map_tmp).Attribute | 0x8000000000000000 != 0 { // EFI_MEMORY_RUNTIME
+            (*map_tmp).VirtualStart = VirtualAddress((*map_tmp).PhysicalStart.0);
+        }
+
+        map_tmp = ((map_tmp as u8) + size_of::<MemoryDescriptor>() as u8) as *mut MemoryDescriptor;
+    } };
+
+    // TODO : ExitBootServices
+
+    unsafe { (uefi.BootServices.ExitBootServices)(handle, 0) };
+
+    unsafe { (uefi.RuntimeServices.SetVirtualAddressMap)(
+                    map_size,
+                    ent_size,
+                    ent_ver,
+                    map_tmp
+                ) };
 
     exec_path("\\boot2snow\\kernel.bin", &[""]);
 

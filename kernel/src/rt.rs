@@ -4,13 +4,17 @@ use uefi_alloc;
 
 use uefi::status::Result;
 use x86::bits64::paging::*;
+use x86::bits64::paging;
+use x86::shared::irq::enable;
+use x86::bits64::irq;
+use x86::shared::control_regs::*;
+use x86::shared::control_regs;
 use uefi::runtime::RuntimeServices;
 use uefi::memory::{PhysicalAddress, MemoryDescriptor};
 
 use main;
 
 #[link_section=".init"]
-
 fn set_max_mode(output: &mut uefi::text::TextOutput) -> Result<()> {
     let mut max_i = None;
     let mut max_w = 0;
@@ -35,6 +39,7 @@ fn set_max_mode(output: &mut uefi::text::TextOutput) -> Result<()> {
     Ok(())
 }
 
+#[link_section=".init"]
 #[no_mangle]
 pub extern "win64" fn _start(handle: uefi::Handle, uefi: &'static mut uefi::system::SystemTable) -> isize {
     unsafe {
@@ -46,9 +51,8 @@ pub extern "win64" fn _start(handle: uefi::Handle, uefi: &'static mut uefi::syst
         }
 
         uefi_alloc::init(::core::mem::transmute(&mut *::UEFI));
-    }
-
-    unsafe { (uefi.BootServices.ExitBootServices)(handle, 0) };
+        enable();
+    };
 
     main();
 
