@@ -18,7 +18,8 @@ use vars::{
     get_boot_next, set_boot_next,
     get_boot_item, set_boot_item,
     get_os_indications, set_os_indications,
-    get_os_indications_supported};
+    get_os_indications_supported
+};
 
 pub fn init() -> Result<()> {
     let uefi = unsafe { &mut *::UEFI };

@@ -32,16 +32,12 @@ impl Display {
     pub fn new(output: Output) -> Self {
         let w = output.0.Mode.Info.HorizontalResolution;
         let h = output.0.Mode.Info.VerticalResolution;
-        let scale = if h > 1440 {
-            2
-        } else {
-            1
-        };
+        let scale = if h > 1440 { 2 } else { 1 };
         Self {
-            output: output,
-            scale: scale,
-            w: w,
-            h: h,
+            output,
+            scale,
+            w,
+            h,
             data: vec![Color::rgb(0, 0, 0); w as usize * h as usize].into_boxed_slice(),
             font: include_bytes!("../../res/unifont.font"),
         }
@@ -100,28 +96,28 @@ impl Display {
         let w = self.w;
         let h = self.h;
 
-        if x >= 0 && y >= 0 && x < w as i32 && y < h as i32 {
-            let new = color.0;
+        let not_inner_pixel = x >= 0 && y >= 0 && x < w as i32 && y < h as i32;
+        if not_inner_pixel { return };
 
-            let alpha = (new >> 24) & 0xFF;
-            if alpha > 0 {
-                let old = &mut self.data[y as usize * w as usize + x as usize];
-                if alpha >= 255 {
-                    old.0 = new;
-                } else {
-                    let n_r = (((new >> 16) & 0xFF) * alpha) >> 8;
-                    let n_g = (((new >> 8) & 0xFF) * alpha) >> 8;
-                    let n_b = ((new & 0xFF) * alpha) >> 8;
+        let new = color.0;
+        let alpha = (new >> 24) & 0xFF;
+        if alpha <= 0 { return };
 
-                    let n_alpha = 255 - alpha;
-                    let o_a = (((old.0 >> 24) & 0xFF) * n_alpha) >> 8;
-                    let o_r = (((old.0 >> 16) & 0xFF) * n_alpha) >> 8;
-                    let o_g = (((old.0 >> 8) & 0xFF) * n_alpha) >> 8;
-                    let o_b = ((old.0 & 0xFF) * n_alpha) >> 8;
+        let old = &mut self.data[y as usize * w as usize + x as usize];
+        old.0 = if alpha >= 255 {
+            new
+        } else {
+            let n_r = (((new >> 16) & 0xFF) * alpha) >> 8;
+            let n_g = (((new >> 8) & 0xFF) * alpha) >> 8;
+            let n_b = ((new & 0xFF) * alpha) >> 8;
 
-                    old.0 = ((o_a << 24) | (o_r << 16) | (o_g << 8) | o_b) + ((alpha << 24) | (n_r << 16) | (n_g << 8) | n_b);
-                }
-            }
+            let n_alpha = 255 - alpha;
+            let o_a = (((old.0 >> 24) & 0xFF) * n_alpha) >> 8;
+            let o_r = (((old.0 >> 16) & 0xFF) * n_alpha) >> 8;
+            let o_g = (((old.0 >> 8) & 0xFF) * n_alpha) >> 8;
+            let o_b = ((old.0 & 0xFF) * n_alpha) >> 8;
+
+            ((o_a << 24) | (o_r << 16) | (o_g << 8) | o_b) + ((alpha << 24) | (n_r << 16) | (n_g << 8) | n_b)
         }
     }
 
@@ -136,18 +132,18 @@ impl Display {
         let len = cmp::max(start_x, cmp::min(self_w as i32, x + w as i32)) - start_x;
 
         let alpha = (color.0 >> 24) & 0xFF;
-        if alpha > 0 {
-            if alpha >= 255 {
-                for y in start_y..end_y {
-                    unsafe {
-                        fast_set32(self.data.as_mut_ptr().offset((y * self_w as i32 + start_x) as isize) as *mut u32, color.0, len as usize);
-                    }
+        if alpha <= 0 { return };
+
+        if alpha >= 255 {
+            for y in start_y..end_y {
+                unsafe {
+                    fast_set32(self.data.as_mut_ptr().offset((y * self_w as i32 + start_x) as isize) as *mut u32, color.0, len as usize);
                 }
-            } else {
-                for y in start_y..end_y {
-                    for x in start_x..start_x + len {
-                        self.inner_pixel(x, y, color);
-                    }
+            }
+        } else {
+            for y in start_y..end_y {
+                for x in start_x..start_x + len {
+                    self.inner_pixel(x, y, color);
                 }
             }
         }
@@ -165,15 +161,13 @@ impl Display {
         let sy = if argy1 < argy2 { 1 } else { -1 };
 
         let mut err = if dx > dy { dx } else {-dy} / 2;
-        let mut err_tolerance;
 
         loop {
             self.inner_pixel(x, y, color);
 
             if x == argx2 && y == argy2 { break };
 
-            err_tolerance = 2 * err;
-
+            let err_tolerance = 2 * err;
             if err_tolerance > -dx { err -= dy; x += sx; }
             if err_tolerance < dy { err += dx; y += sy; }
         }
@@ -183,7 +177,6 @@ impl Display {
     pub fn inner_circle(&mut self, x0: i32, y0: i32, radius: i32, filled: bool, color: Color) {
         let mut x = 1;
         let mut y = radius.abs();
-        let mut distance = 0;
 
         if filled {
             self.inner_line(x0, radius + y0, x0, -radius + y0, color);
@@ -195,7 +188,7 @@ impl Display {
             self.inner_pixel(-radius + x0, y0, color);
         }
 
-        distance = -radius;
+        let mut distance = -radius;
 
         while x <= y {
             distance += (x << 1) - 1;
@@ -207,19 +200,19 @@ impl Display {
             }
 
             if filled {
-                self.inner_line(-x + x0, y + y0, x + x0, y + y0, color);
-                self.inner_line(-x + x0, -y + y0, x + x0, -y + y0, color);
-                self.inner_line(-y + x0, x + y0, y + x0, x + y0, color);
-                self.inner_line(-y + x0, -x + y0, y + x0, -x + y0, color);
+                self.inner_line(x0 - x, y0 + y, x0 + x, y0 + y, color);
+                self.inner_line(x0 - x, y0 - y, x0 + x, y0 - y, color);
+                self.inner_line(x0 - y, y0 + x, x0 + y, y0 + x, color);
+                self.inner_line(x0 - y, y0 - x, x0 + y, y0 - x, color);
             } else {
-                self.inner_pixel(x + x0, y + y0, color);
-                self.inner_pixel(x + x0, -y + y0, color);
-                self.inner_pixel(-x + x0, y + y0, color);
-                self.inner_pixel(-x + x0, -y + y0, color);
-                self.inner_pixel(y + x0, x + y0, color);
-                self.inner_pixel(y + x0, -x + y0, color);
-                self.inner_pixel(-y + x0, x + y0, color);
-                self.inner_pixel(-y + x0, -x + y0, color);
+                self.inner_pixel(x0 + x, y0 + y, color);
+                self.inner_pixel(x0 + x, y0 - y, color);
+                self.inner_pixel(x0 - x, y0 + y, color);
+                self.inner_pixel(x0 - x, y0 - y, color);
+                self.inner_pixel(x0 + y, y0 + x, color);
+                self.inner_pixel(x0 + y, y0 - x, color);
+                self.inner_pixel(x0 - y, y0 + x, color);
+                self.inner_pixel(x0 - y, y0 - x, color);
             }
 
             x += 1;
@@ -230,12 +223,12 @@ impl Display {
 impl Renderer for Display {
     /// Get the width of the image in pixels
     fn width(&self) -> u32 {
-        self.w/self.scale
+        self.w / self.scale
     }
 
     /// Get the height of the image in pixels
     fn height(&self) -> u32 {
-        self.h/self.scale
+        self.h / self.scale
     }
 
     /// Return a reference to a slice of colors making up the image
@@ -262,12 +255,11 @@ impl Renderer for Display {
     fn char(&mut self, x: i32, y: i32, c: char, color: Color) {
         let mut offset = (c as usize) * 16;
         for row in 0..16 {
-            let row_data;
-            if offset < self.font.len() {
-                row_data = self.font[offset];
+            let row_data = if offset < self.font.len() {
+                self.font[offset]
             } else {
-                row_data = 0;
-            }
+                0
+            };
 
             for col in 0..8 {
                 let pixel = (row_data >> (7 - col)) & 1;
@@ -298,9 +290,6 @@ impl Renderer for Display {
 
     /// Draw a line
     fn line(&mut self, argx1: i32, argy1: i32, argx2: i32, argy2: i32, color: Color) {
-        let mut x = argx1;
-        let mut y = argy1;
-
         let dx = if argx1 > argx2 { argx1 - argx2 } else { argx2 - argx1 };
         let dy = if argy1 > argy2 { argy1 - argy2 } else { argy2 - argy1 };
 
@@ -308,15 +297,16 @@ impl Renderer for Display {
         let sy = if argy1 < argy2 { 1 } else { -1 };
 
         let mut err = if dx > dy { dx } else {-dy} / 2;
-        let mut err_tolerance;
+
+        let mut x = argx1;
+        let mut y = argy1;
 
         loop {
             self.pixel(x, y, color);
 
             if x == argx2 && y == argy2 { break };
 
-            err_tolerance = 2 * err;
-
+            let err_tolerance = 2 * err;
             if err_tolerance > -dx { err -= dy; x += sx; }
             if err_tolerance < dy { err += dx; y += sy; }
         }
@@ -339,7 +329,6 @@ impl Renderer for Display {
         let w = w as i32;
         let h = h as i32;
         let r = radius as i32;
-
 
         if filled {
             //Draw inside corners
@@ -374,7 +363,9 @@ impl Renderer for Display {
         let mut err = 0;
 
         while x >= y {
-            if radius < 0 {
+            if radius == 0 {
+                self.pixel(x0, y0, color);
+            } else if radius < 0 {
                 if parts & 1 << 0 != 0 { self.rect(x0 - x, y0 + y, x as u32, 1, color); }
                 if parts & 1 << 1 != 0 { self.rect(x0, y0 + y, x as u32 + 1, 1, color); }
                 if parts & 1 << 2 != 0 { self.rect(x0 - y, y0 + x, y as u32, 1, color); }
@@ -383,8 +374,6 @@ impl Renderer for Display {
                 if parts & 1 << 5 != 0 { self.rect(x0, y0 - y, x as u32 + 1, 1, color); }
                 if parts & 1 << 6 != 0 { self.rect(x0 - y, y0 - x, y as u32, 1, color); }
                 if parts & 1 << 7 != 0 { self.rect(x0, y0 - x, y as u32 + 1, 1, color); }
-            } else if radius == 0 {
-                self.pixel(x0, y0, color);
             } else {
                 if parts & 1 << 0 != 0 { self.pixel(x0 - x, y0 + y, color); }
                 if parts & 1 << 1 != 0 { self.pixel(x0 + x, y0 + y, color); }
@@ -397,10 +386,10 @@ impl Renderer for Display {
             }
 
             y += 1;
-            err += 1 + 2*y;
-            if 2*(err-x) + 1 > 0 {
+            err += 1 + 2 * y;
+            if 2 * (err - x) + 1 > 0 {
                 x -= 1;
-                err += 1 - 2*x;
+                err += 1 - 2 * x;
             }
         }
     }

@@ -18,10 +18,8 @@ pub fn nstr(wstring: *const u16) -> String {
     let mut i = 0;
     loop {
         let w = unsafe { *wstring.offset(i) };
+        if w == 0 { break }
         i += 1;
-        if w == 0 {
-            break;
-        }
         let c = unsafe { char::from_u32_unchecked(w as u32) };
         string.push(c);
     }

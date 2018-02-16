@@ -49,15 +49,15 @@ impl Image {
 
     /// Create a new image from a boxed slice of colors
     pub fn from_data(width: u32, height: u32, data: Box<[Color]>) -> Result<Self, String> {
-        if (width * height) as usize != data.len() {
-            return Err("not enough or too much data given compared to width and height".to_string())
+        if (width * height) as usize == data.len() {
+            Ok(Image {
+                w: width,
+                h: height,
+                data,
+            })
+        } else {
+            Err("not enough or too much data given compared to width and height".to_string())
         }
-
-        Ok(Image {
-            w: width,
-            h: height,
-            data: data,
-        })
     }
 
     /// Create a new empty image

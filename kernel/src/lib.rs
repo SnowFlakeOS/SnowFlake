@@ -57,7 +57,7 @@ fn main() {
     if let Err(err) = snowkernel::init() {
         println!("Init error: {:?}", err);
         let _ = io::wait_key();
-	}
+    }
 
     loop {}
 }

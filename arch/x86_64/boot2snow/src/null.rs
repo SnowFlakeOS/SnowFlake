@@ -89,7 +89,7 @@ impl NullDisplay {
             EnableCursor: enable_cursor,
             Mode: unsafe { mem::transmute(&*mode.deref()) },
 
-            mode: mode
+            mode
         }
     }
 

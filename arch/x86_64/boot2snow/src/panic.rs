@@ -8,8 +8,7 @@ use core::fmt;
 pub extern fn rust_eh_personality() {}
 
 #[no_mangle]
-pub extern fn 
-___chkstk_ms() {}
+pub extern fn ___chkstk_ms() {}
 
 // This function may be needed based on the compilation target.
 #[lang = "eh_unwind_resume"]
