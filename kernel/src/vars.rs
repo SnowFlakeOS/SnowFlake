@@ -45,14 +45,12 @@ pub fn get_boot_next() -> Result<u16> {
 }
 
 pub fn set_boot_next(num_opt: Option<u16>) -> Result<usize> {
-    if let Some(num) = num_opt {
-        set("BootNext", &[
-            num as u8,
-            (num >> 8) as u8
-        ])
+    let data = if Some(num) = num_opt {
+        &[num as u8, (num >> 8) as u8]
     } else {
-        set("BootNext", &[])
-    }
+        &[]
+    };
+    set("BootNext", data)
 }
 
 pub fn get_boot_order() -> Result<Vec<u16>> {
@@ -121,7 +119,9 @@ pub fn set_os_indications(indications_opt: Option<u64>) -> Result<usize> {
 pub fn get_os_indications_supported() -> Result<u64> {
     let mut data = [0; 8];
     let count = get("OsIndicationsSupported", &mut data)?;
-    if count == 8 {
+    if count != 8 {
+        Err(Error::LoadError)
+    } else {
         Ok(
             (data[0] as u64) |
             ((data[1] as u64) << 8) |
@@ -132,7 +132,5 @@ pub fn get_os_indications_supported() -> Result<u64> {
             ((data[6] as u64) << 48) |
             ((data[7] as u64) << 56)
         )
-    } else {
-        Err(Error::LoadError)
     }
 }

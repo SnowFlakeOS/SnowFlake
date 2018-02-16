@@ -102,12 +102,12 @@ impl<'a> TextDisplay<'a> {
             EnableCursor: enable_cursor,
             Mode: unsafe { mem::transmute(&*mode.deref()) },
 
-            mode: mode,
+            mode,
             off_x: 0,
             off_y: 0,
-            cols: cols,
-            rows: rows,
-            display: display,
+            cols,
+            rows,
+            display,
         }
     }
 
@@ -127,23 +127,23 @@ impl<'a> TextDisplay<'a> {
     }
 
     pub fn scroll(&mut self, color: Color) {
-        if self.rows > 0 {
-            let w = self.display.width();
+        if self.rows <= 0 { return }
 
-            let dst = self.off_y * w as i32;
-            let src = (self.off_y + 16) * w as i32;
-            let len = (self.rows - 1) * 16 * w as usize;
-            unsafe {
-                let scale = self.display.scale() as isize;
-                let data_ptr = self.display.data_mut().as_mut_ptr() as *mut u32;
-                ::display::fast_copy(
-                    data_ptr.offset(dst as isize * scale * scale) as *mut u8,
-                    data_ptr.offset(src as isize * scale * scale) as *const u8,
-                    len * (scale * scale) as usize * 4);
-            }
+        let w = self.display.width();
 
-            self.display.rect(self.off_x, self.off_y + (self.rows as i32 - 1) * 16, self.cols as u32 * 8, 16, color);
+        let dst = self.off_y * w as i32;
+        let src = (self.off_y + 16) * w as i32;
+        let len = (self.rows - 1) * 16 * w as usize;
+        unsafe {
+            let scale = self.display.scale() as isize;
+            let data_ptr = self.display.data_mut().as_mut_ptr() as *mut u32;
+            ::display::fast_copy(
+                data_ptr.offset(dst as isize * scale * scale) as *mut u8,
+                data_ptr.offset(src as isize * scale * scale) as *const u8,
+                len * (scale * scale) as usize * 4);
         }
+
+        self.display.rect(self.off_x, self.off_y + (self.rows as i32 - 1) * 16, self.cols as u32 * 8, 16, color);
     }
 
     pub fn set_cursor_pos(&mut self, column: i32, _row: i32) {
@@ -156,16 +156,11 @@ impl<'a> TextDisplay<'a> {
 
         let mut scrolled = false;
         let mut changed = false;
-        let (_sx, sy) = self.pos();
+        let (_, sy) = self.pos();
 
         let mut i = 0;
-        loop {
-            let w = unsafe { *string.offset(i) };
-            if w == 0 {
-                break;
-            }
-
-            let c = unsafe { char::from_u32_unchecked(w as u32) };
+        while let w = unsafe { *string.offset(i) } {
+            if w == 0 { break; }
 
             if self.mode.CursorColumn as usize >= self.cols {
                 self.mode.CursorColumn = 0;
@@ -178,18 +173,20 @@ impl<'a> TextDisplay<'a> {
                 scrolled = true;
             }
 
+            let c = unsafe { char::from_u32_unchecked(w as u32) };
+
             match c {
-                '\x08' => if self.mode.CursorColumn > 0 {
-                    let (x, y) = self.pos();
-                    self.display.rect(x, y, 8, 16, bg);
-                    self.mode.CursorColumn -= 1;
-                    changed = true;
-                },
                 '\r'=> {
                     self.mode.CursorColumn = 0;
                 },
                 '\n' => {
                     self.mode.CursorRow += 1;
+                },
+                '\x08' => if self.mode.CursorColumn > 0 {
+                    let (x, y) = self.pos();
+                    self.display.rect(x, y, 8, 16, bg);
+                    self.mode.CursorColumn -= 1;
+                    changed = true;
                 },
                 _ => {
                     let (x, y) = self.pos();
@@ -208,7 +205,7 @@ impl<'a> TextDisplay<'a> {
             let (cy, ch) = (self.off_y, self.rows as u32 * 16);
             self.display.blit(cx, cy, cw as u32, ch as u32);
         } else if changed {
-            let (_x, y) = self.pos();
+            let (_, y) = self.pos();
             let (cx, cw) = (0, self.display.width() as i32);
             let (cy, ch) = (sy, y + 16 - sy);
             self.display.blit(cx, cy, cw as u32, ch as u32);

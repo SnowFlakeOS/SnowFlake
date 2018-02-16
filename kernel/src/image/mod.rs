@@ -18,8 +18,8 @@ impl<'a> ImageRoi<'a> {
     /// Draw the ROI on a window
     pub fn draw<R: Renderer>(&self, renderer: &mut R, x: i32, mut y: i32) {
         let stride = self.image.w;
-        let mut offset = (self.y * stride + self.x) as usize;
         let last_offset = cmp::min(((self.y + self.h) * stride + self.x) as usize, self.image.data.len());
+        let mut offset = (self.y * stride + self.x) as usize;
         while offset < last_offset {
             let next_offset = offset + stride as usize;
             renderer.image(x, y, self.w, 1, &self.image.data[offset..]);
@@ -56,7 +56,7 @@ impl Image {
         Ok(Image {
             w: width,
             h: height,
-            data: data,
+            data,
         })
     }
 

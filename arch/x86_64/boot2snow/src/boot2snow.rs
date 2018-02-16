@@ -20,7 +20,8 @@ use vars::{
     get_boot_next, set_boot_next,
     get_boot_item, set_boot_item,
     get_os_indications, set_os_indications,
-    get_os_indications_supported};
+    get_os_indications_supported
+};
 
 pub fn init() -> Result<()> {
     let uefi = unsafe { &mut *::UEFI };
@@ -68,7 +69,7 @@ pub fn init() -> Result<()> {
         display.set(bg);
 
         {
-            let x = (display.width() as i32 - splash.width() as i32) /2;
+            let x = (display.width() as i32 - splash.width() as i32) / 2;
             let y = ((display.height() as i32 - splash.height() as i32) / 2) as i32 - 32;
             splash.draw(&mut display, x, y);
         }
@@ -86,10 +87,7 @@ pub fn init() -> Result<()> {
 
         unsafe { (uefi.BootServices.GetMemoryMap)(&mut map_size, ::core::ptr::null_mut(), &mut map_key, &mut ent_size, &mut ent_ver) };
 
-	    let mut map;
-
-	    loop {
-            map = uefi.BootServices.AllocatePoolVec( ::uefi::memory::MemoryType::EfiLoaderData, map_size / ent_size );
+	    while let map = uefi.BootServices.AllocatePoolVec(::uefi::memory::MemoryType::EfiLoaderData, map_size / ent_size) {
             match unsafe { (uefi.BootServices.GetMemoryMap)(&mut map_size, map.as_mut_ptr(), &mut map_key, &mut ent_size, &mut ent_ver) } {
 				::uefi::status::Status(0) => break,
 				::uefi::status::Status(5) => continue,
@@ -97,33 +95,34 @@ pub fn init() -> Result<()> {
             }
         }
 
-        unsafe {
-			map.set_len( map_size / ent_size );
-        }
+        unsafe { map.set_len( map_size / ent_size ); };
 
         (map_size, map_key, ent_size, ent_ver, map)
     };
 
     let mut map_tmp = unsafe { map.ptr.as_ptr() };
 
-    unsafe { for i in 0..map.len {
-        if (*map_tmp).Attribute | 0x8000000000000000 != 0 { // EFI_MEMORY_RUNTIME
-            (*map_tmp).VirtualStart = VirtualAddress((*map_tmp).PhysicalStart.0);
-        }
+    unsafe {
+        for i in 0..map.len {
+            if (*map_tmp).Attribute | 0x8000000000000000 != 0 { // EFI_MEMORY_RUNTIME
+                (*map_tmp).VirtualStart = VirtualAddress((*map_tmp).PhysicalStart.0);
+            }
 
-        map_tmp = ((map_tmp as u8) + size_of::<MemoryDescriptor>() as u8) as *mut MemoryDescriptor;
-    } };
+            map_tmp = ((map_tmp as u8) + size_of::<MemoryDescriptor>() as u8) as *mut MemoryDescriptor;
+        }
+    };
 
     // TODO : ExitBootServices
 
-    unsafe { (uefi.BootServices.ExitBootServices)(handle, 0) };
-
-    unsafe { (uefi.RuntimeServices.SetVirtualAddressMap)(
-                    map_size,
-                    ent_size,
-                    ent_ver,
-                    map_tmp
-                ) };
+    unsafe {
+        (uefi.BootServices.ExitBootServices)(handle, 0);
+        (uefi.RuntimeServices.SetVirtualAddressMap)(
+            map_size,
+            ent_size,
+            ent_ver,
+            map_tmp
+        );
+    };
 
     exec_path("\\boot2snow\\kernel.bin", &[""]);
 
@@ -134,7 +133,7 @@ fn status_msg(display: &mut Display, splash_height: u32, msg: &str) {
     let prompt = msg.clone();
     let mut x = (display.width() as i32 - prompt.len() as i32 * 8) / 2;
     let y = ((display.height() as i32 - splash_height as i32) / 2) as i32 + 256;
-    
+
     let rect_x = 0;
     let rect_y = (y - 16);
     let rect_width = display.width();

@@ -45,14 +45,12 @@ pub fn get_boot_next() -> Result<u16> {
 }
 
 pub fn set_boot_next(num_opt: Option<u16>) -> Result<usize> {
-    if let Some(num) = num_opt {
-        set("BootNext", &[
-            num as u8,
-            (num >> 8) as u8
-        ])
+    let data = if Some(num) = num_opt {
+        &[num as u8, (num >> 8) as u8]
     } else {
-        set("BootNext", &[])
-    }
+        &[]
+    };
+    set("BootNext", data)
 }
 
 pub fn get_boot_order() -> Result<Vec<u16>> {
@@ -71,10 +69,10 @@ pub fn get_boot_order() -> Result<Vec<u16>> {
 pub fn get_boot_item(num: u16) -> Result<Vec<u8>> {
     let mut data = [0; 4096];
     let count = get(&format!("Boot{:>04X}", num), &mut data)?;
-    if count < 6 {
-        Err(Error::LoadError)
-    } else {
+    if count >= 6 {
         Ok(data[..count].to_vec())
+    } else {
+        Err(Error::LoadError)
     }
 }
 
@@ -85,9 +83,11 @@ pub fn set_boot_item(num: u16, data: &[u8]) -> Result<usize> {
 pub fn get_os_indications() -> Result<u64> {
     let mut data = [0; 8];
     let count = get("OsIndications", &mut data)?;
-    if count == 8 {
+    if count != 8 {
+        Err(Error::LoadError)
+    } else {
         Ok(
-            (data[0] as u64) |
+            ((data[0] as u64) << 0) |
             ((data[1] as u64) << 8) |
             ((data[2] as u64) << 16) |
             ((data[3] as u64) << 24) |
@@ -96,15 +96,13 @@ pub fn get_os_indications() -> Result<u64> {
             ((data[6] as u64) << 48) |
             ((data[7] as u64) << 56)
         )
-    } else {
-        Err(Error::LoadError)
     }
 }
 
 pub fn set_os_indications(indications_opt: Option<u64>) -> Result<usize> {
-    if let Some(indications) = indications_opt {
-        set("OsIndications", &[
-            indications as u8,
+    let data = if let Some(indications) = indications_opt {
+        &[
+            (indications >> 0) as u8,
             (indications >> 8) as u8,
             (indications >> 16) as u8,
             (indications >> 24) as u8,
@@ -112,18 +110,21 @@ pub fn set_os_indications(indications_opt: Option<u64>) -> Result<usize> {
             (indications >> 40) as u8,
             (indications >> 48) as u8,
             (indications >> 56) as u8
-        ])
+        ]
     } else {
-        set("OsIndications", &[])
-    }
+        &[]
+    };
+    set("OsIndications", data)
 }
 
 pub fn get_os_indications_supported() -> Result<u64> {
     let mut data = [0; 8];
     let count = get("OsIndicationsSupported", &mut data)?;
-    if count == 8 {
+    if count != 8 {
+        Err(Error::LoadError)
+    } else {
         Ok(
-            (data[0] as u64) |
+            ((data[0] as u64) << 0) |
             ((data[1] as u64) << 8) |
             ((data[2] as u64) << 16) |
             ((data[3] as u64) << 24) |
@@ -132,7 +133,5 @@ pub fn get_os_indications_supported() -> Result<u64> {
             ((data[6] as u64) << 48) |
             ((data[7] as u64) << 56)
         )
-    } else {
-        Err(Error::LoadError)
     }
 }
