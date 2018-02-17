@@ -45,12 +45,14 @@ pub fn get_boot_next() -> Result<u16> {
 }
 
 pub fn set_boot_next(num_opt: Option<u16>) -> Result<usize> {
-    let data = if Some(num) = num_opt {
-        &[num as u8, (num >> 8) as u8]
+    if let Some(num) = num_opt {
+        set("BootNext", &[
+            num as u8,
+            (num >> 8) as u8
+        ])
     } else {
-        &[]
-    };
-    set("BootNext", data)
+        set("BootNext", &[])
+    }
 }
 
 pub fn get_boot_order() -> Result<Vec<u16>> {

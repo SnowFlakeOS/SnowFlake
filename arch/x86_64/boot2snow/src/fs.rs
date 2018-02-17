@@ -39,10 +39,14 @@ impl File {
 
     pub fn read_to_end(&mut self, vec: &mut Vec<u8>) -> Result<usize> {
         let mut total = 0;
-        let mut buf = [0; 8192];
 
-        while let count = self.read(&mut buf)? {
-            if count == 0 { break; }
+        loop {
+            let mut buf = [0; 8192];
+
+            let count = self.read(&mut buf)?;
+            if count == 0 {
+                break;
+            }
 
             vec.extend(&buf[.. count]);
             total += count;

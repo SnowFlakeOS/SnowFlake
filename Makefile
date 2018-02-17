@@ -32,8 +32,9 @@ $(img): #$(kernel)
 	@mmd -i $(img).tmp ::/efi
 	@mmd -i $(img).tmp ::/efi/boot
 	@mcopy -i $(img).tmp $(kernel) ::/boot2snow
-	@mcopy -i $(img).tmp only_logo.bmp ::/boot2snow
-	@mcopy -i $(img).tmp full_logo.bmp ::/boot2snow
+	@mcopy -i $(img).tmp res/only_logo.bmp ::/boot2snow
+	@mcopy -i $(img).tmp res/full_logo.bmp ::/boot2snow
+	@mcopy -i $(img).tmp res/boot2snow.conf ::/boot2snow
 	@mcopy -i $(img).tmp $(boot2snow) ::/efi/boot
 	@dd if=/dev/zero of=$@ bs=512 count=100352
 	@/usr/sbin/parted $@ -s -a minimal mklabel gpt

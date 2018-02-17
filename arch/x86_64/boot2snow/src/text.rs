@@ -156,11 +156,16 @@ impl<'a> TextDisplay<'a> {
 
         let mut scrolled = false;
         let mut changed = false;
-        let (_, sy) = self.pos();
+        let (_sx, sy) = self.pos();
 
         let mut i = 0;
-        while let w = unsafe { *string.offset(i) } {
-            if w == 0 { break; }
+        loop {
+            let w = unsafe { *string.offset(i) };
+            if w == 0 {
+                break;
+            }
+
+            let c = unsafe { char::from_u32_unchecked(w as u32) };
 
             if self.mode.CursorColumn as usize >= self.cols {
                 self.mode.CursorColumn = 0;
@@ -173,20 +178,18 @@ impl<'a> TextDisplay<'a> {
                 scrolled = true;
             }
 
-            let c = unsafe { char::from_u32_unchecked(w as u32) };
-
             match c {
-                '\r'=> {
-                    self.mode.CursorColumn = 0;
-                },
-                '\n' => {
-                    self.mode.CursorRow += 1;
-                },
                 '\x08' => if self.mode.CursorColumn > 0 {
                     let (x, y) = self.pos();
                     self.display.rect(x, y, 8, 16, bg);
                     self.mode.CursorColumn -= 1;
                     changed = true;
+                },
+                '\r'=> {
+                    self.mode.CursorColumn = 0;
+                },
+                '\n' => {
+                    self.mode.CursorRow += 1;
                 },
                 _ => {
                     let (x, y) = self.pos();
@@ -205,7 +208,7 @@ impl<'a> TextDisplay<'a> {
             let (cy, ch) = (self.off_y, self.rows as u32 * 16);
             self.display.blit(cx, cy, cw as u32, ch as u32);
         } else if changed {
-            let (_, y) = self.pos();
+            let (_x, y) = self.pos();
             let (cx, cw) = (0, self.display.width() as i32);
             let (cy, ch) = (sy, y + 16 - sy);
             self.display.blit(cx, cy, cw as u32, ch as u32);

@@ -5,9 +5,11 @@ use core::mem::size_of;
 use orbclient::{Color, Renderer};
 use uefi::reset::ResetType;
 use uefi::status::{Error, Result, Status};
-use uefi::boot::BootServices;
+use uefi::boot::{BootServices, TimerDelay};
+use uefi::Event;
 use uefi::memory::{MemoryType, MemoryDescriptor, VirtualAddress};
 
+use conf::load_conf;
 use exec::exec_path;
 use display::{Display, Output};
 use fs::{File, Dir, find, load};
@@ -79,7 +81,17 @@ pub fn init() -> Result<()> {
         status_msg(&mut display, splash.height(), concat!("Boot2Snow ", env!("CARGO_PKG_VERSION")));
     }
 
-    let (map_size, map_key, ent_size, ent_ver, map) = { 
+    {
+        load_conf();
+
+        let mut event = Event(0);
+        unsafe { (uefi.BootServices.CreateEvent)(0, 0, None, ::core::ptr::null_mut(), &mut event);
+                 (uefi.BootServices.SetTimer)(event, TimerDelay::Periodic, 1000000) };
+    
+        // TODO: Set timer and load conf
+    }
+
+    let (map, map_size, map_key, ent_size, ent_ver) = { 
         let mut map_size = 0;
 		let mut map_key = 0;
 		let mut ent_size = 0;
@@ -87,7 +99,11 @@ pub fn init() -> Result<()> {
 
         unsafe { (uefi.BootServices.GetMemoryMap)(&mut map_size, ::core::ptr::null_mut(), &mut map_key, &mut ent_size, &mut ent_ver) };
 
-	    while let map = uefi.BootServices.AllocatePoolVec(::uefi::memory::MemoryType::EfiLoaderData, map_size / ent_size) {
+        assert_eq!( ent_size, size_of::<::uefi::memory::MemoryDescriptor>() );
+	    let mut map;
+
+	    loop {
+            map = uefi.BootServices.AllocatePoolVec( ::uefi::memory::MemoryType::EfiLoaderData, map_size );
             match unsafe { (uefi.BootServices.GetMemoryMap)(&mut map_size, map.as_mut_ptr(), &mut map_key, &mut ent_size, &mut ent_ver) } {
 				::uefi::status::Status(0) => break,
 				::uefi::status::Status(5) => continue,
@@ -95,9 +111,11 @@ pub fn init() -> Result<()> {
             }
         }
 
-        unsafe { map.set_len( map_size / ent_size ); };
+        unsafe {
+			map.set_len( map_size / ent_size );
+        }
 
-        (map_size, map_key, ent_size, ent_ver, map)
+        (map, map_size, map_key, ent_size, ent_ver)
     };
 
     let mut map_tmp = unsafe { map.ptr.as_ptr() };

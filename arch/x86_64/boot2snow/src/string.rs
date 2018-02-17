@@ -26,3 +26,7 @@ pub fn nstr(wstring: *const u16) -> String {
 
     string
 }
+
+pub fn utf8_to_string(vector: Vec<u8>) -> String {
+  String::from_utf8(vector).unwrap()
+}

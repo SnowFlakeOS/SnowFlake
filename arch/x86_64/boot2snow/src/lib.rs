@@ -44,6 +44,7 @@ pub mod shell;
 pub mod string;
 pub mod text;
 pub mod vars;
+pub mod conf;
 
 pub mod boot2snow;
 
