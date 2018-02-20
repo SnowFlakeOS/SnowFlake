@@ -8,13 +8,14 @@ use uefi::status::{Error, Result, Status};
 use uefi::boot::{BootServices, TimerDelay};
 use uefi::Event;
 use uefi::memory::{MemoryType, MemoryDescriptor, VirtualAddress};
+use uefi::text::TextInputKey;
 
-use conf::load_conf;
+use conf::{Conf, load_conf};
 use exec::exec_path;
 use display::{Display, Output};
 use fs::{File, Dir, find, load};
 use image::{self, Image};
-use io::wait_key;
+use io::{wait_key, wait_timeout};
 use proto::Protocol;
 use text::TextDisplay;
 use vars::{
@@ -28,6 +29,7 @@ use vars::{
 pub fn init() -> Result<()> {
     let uefi = unsafe { &mut *::UEFI };
     let handle = unsafe { ::HANDLE };
+    let conf: Conf = load_conf();
 
     let mut display = {
         let output = Output::one()?;
@@ -80,16 +82,8 @@ pub fn init() -> Result<()> {
 
         status_msg(&mut display, splash.height(), concat!("Boot2Snow ", env!("CARGO_PKG_VERSION")));
     }
-
-    {
-        load_conf();
-
-        let mut event = Event(0);
-        unsafe { (uefi.BootServices.CreateEvent)(0, 0, None, ::core::ptr::null_mut(), &mut event);
-                 (uefi.BootServices.SetTimer)(event, TimerDelay::Periodic, 1000000) };
     
-        // TODO: Set timer and load conf
-    }
+    wait_timeout(conf.boot_timeout);
 
     let (map, map_size, map_key, ent_size, ent_ver) = { 
         let mut map_size = 0;

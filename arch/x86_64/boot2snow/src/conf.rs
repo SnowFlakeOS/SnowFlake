@@ -1,18 +1,34 @@
 use string::{wstr, utf8_to_string};
 use fs::{File, Dir, find, load};
+use core::mem;
+use alloc::vec::Vec;
+use alloc::string::{ToString, String};
+use alloc::str::Split;
+use alloc::borrow::ToOwned;
 
 pub struct Conf {
-    kernel: &'static str,
-    kernel_option: &'static str,
-    boot_timer: u16
+    pub kernel: String,
+    pub kernel_option: String,
+    pub boot_timeout: u64
 }
 
 pub fn load_conf() -> Conf {
-    let mut conf = Conf { kernel: "", kernel_option: "", boot_timer: 0 };
+    let mut conf: Conf = unsafe { mem::zeroed() };
     
     if let Ok(file) = load("\\boot2snow\\boot2snow.conf") {
-        for data in utf8_to_string(file).replace(" ", "").split("\n") {
-            println!("{}", data);
+        let line: Vec<String> = utf8_to_string(file).replace(" ", "").split("\n")
+            .map(|s: &str| s.to_string())
+            .collect();
+
+        for data in &line {
+            let s = data.split("=").nth(0).unwrap().to_string();
+            if s == "kernel" {
+                conf.kernel = data.split("=").nth(1).unwrap().to_string();
+            } else if s == "kernel_option" {
+                conf.kernel_option = data.split("=").nth(1).unwrap().to_string();
+            } else if s == "boot_timeout" {
+                conf.boot_timeout = data.split("=").nth(1).unwrap().to_string().parse::<u64>().unwrap();
+            }
         }
     }
 
