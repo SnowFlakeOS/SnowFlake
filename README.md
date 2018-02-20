@@ -31,8 +31,7 @@ Requirements to build
 Will be added later
 
 ### Mac
-macOS is default ld is bsd ld (cannot link SnowFlake)
-and default as is clang too (build error)
+The default linker of the macOS is BSD linker so it can't linked Snowflake.
 If you want build SnowFlake on macOS
 - Need HomeBrew (https://brew.sh/)
 - Need Xcode Command Line Tools (This will install both HomeBrew)
