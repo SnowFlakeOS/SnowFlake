@@ -22,7 +22,7 @@ Technology is free, SnowFlakeOS
 ### FlakeOS (LibOS)
 
 ## Building
-This is SnowFlake is require for build.
+Requirements to build
 - Rust (https://www.rust-lang.org)
 - NASM (http://www.nasm.us/)
 - GCC Toolchain or GCC (https://gcc.gnu.org/)
