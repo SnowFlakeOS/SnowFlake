@@ -1,11 +1,11 @@
 arch ?= x86_64
 target_arch ?= $(arch)-snowflake
 
-LD = $(arch)-efi-pe-ld
-AS = $(arch)-efi-pe-as
-AR = $(arch)-efi-pe-ar
-STRIP = $(arch)-efi-pe-strip
-OBJDUMP = $(arch)-efi-pe-objdump
+LD = $(arch)-elf-ld
+AS = $(arch)-elf-as
+AR = $(arch)-elf-ar
+STRIP = $(arch)-elf-strip
+OBJDUMP = $(arch)-elf-objdump
 CARGO = xargo
 
 BUILD_DIR = ../build/kernel
@@ -20,28 +20,9 @@ all: $(kernel)
 
 $(kernel): $(kernel_obj)
 	@mkdir -p $(shell dirname $@)
-	@$(LD) \
-		-T $(linker_script) \
-		--oformat pei-x86-64 \
-		--dll \
-		--image-base 0 \
-		--section-alignment 32 \
-		--file-alignment 32 \
-		--major-os-version 0 \
-		--minor-os-version 0 \
-		--major-image-version 0 \
-		--minor-image-version 0 \
-		--major-subsystem-version 0 \
-		--minor-subsystem-version 0 \
-		--subsystem 10 \
-		--heap 0,0 \
-		--stack 0,0 \
-		--pic-executable \
-		--entry _start \
-		--no-insert-timestamp \
-		$< -o $@
+	@$(LD) -n --gc-sections -T $(linker_script) $< -o $@ -z max-page-size=0x1000
 	@$(OBJDUMP) -d $@ > $@.dsm
-	@$(STRIP) $@
+	@$(STRIP) -g $@
 
 $(kernel_obj):
 	@mkdir -p $(shell dirname $@)

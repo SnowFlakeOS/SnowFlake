@@ -1,60 +1,22 @@
-use core::ops::Try;
-use uefi;
-use uefi_alloc;
+#[path="../../share/uefi_proto.rs"]
+mod kernel_proto;
 
-use uefi::status::Result;
+use core::ops::Try;
 use x86::bits64::paging::*;
 use x86::bits64::paging;
 use x86::shared::irq::enable;
 use x86::bits64::irq;
 use x86::shared::control_regs::*;
 use x86::shared::control_regs;
-use uefi::runtime::RuntimeServices;
-use uefi::memory::{PhysicalAddress, MemoryDescriptor};
 
-use main;
-
-#[link_section=".init"]
-fn set_max_mode(output: &mut uefi::text::TextOutput) -> Result<()> {
-    let mut max_i = None;
-    let mut max_w = 0;
-    let mut max_h = 0;
-
-    for i in 0..output.Mode.MaxMode as usize {
-        let mut w = 0;
-        let mut h = 0;
-        if (output.QueryMode)(output, i, &mut w, &mut h).into_result().is_ok() {
-            if w >= max_w && h >= max_h {
-                max_i = Some(i);
-                max_w = w;
-                max_h = h;
-            }
-        }
-    }
-
-    if let Some(i) = max_i {
-        (output.SetMode)(output, i)?;
-    }
-
-    Ok(())
-}
+use kmain;
 
 #[link_section=".init"]
 #[no_mangle]
-pub extern "win64" fn _start(handle: uefi::Handle, uefi: &'static mut uefi::system::SystemTable) -> isize {
-    unsafe {
-        ::HANDLE = handle;
-        ::UEFI = uefi;
+pub extern fn _start(magic: usize, info: *const kernel_proto::Info) {
+    // TODO : Set Virtual Memory
 
-        if let Err(err) = set_max_mode(uefi.ConsoleOut).into_result() {
-            println!("Failed to set max mode: {:?}", err);
-        }
-
-        uefi_alloc::init(::core::mem::transmute(&mut *::UEFI));
-        enable();
-    };
-
-    main();
-
-    0
+    if magic == 0x71FF0EF1 {
+        kmain();
+    }
 }

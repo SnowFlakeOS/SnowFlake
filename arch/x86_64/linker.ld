@@ -1,51 +1,45 @@
 ENTRY(_start)
 
+KERNEL_VMA = 0xFFFF800000000000;
+KERNEL_LMA = 0x100000;
+
 SECTIONS {
-  . = 1M;
+  . = KERNEL_LMA;
+	KERNEL_BASE = .;
+  . += SIZEOF_HEADERS;
+  LOAD_ADDR = .;
 
-  .rodata :
-  {
+  .init : AT(ADDR(.init)) {
+		*(.inittext)
+		. = ALIGN(8);
+		*(.initdata)
+  }
+
+  . += KERNEL_VMA;
+
+  .rodata ALIGN(0x1000): AT(ADDR(.rodata) - KERNEL_VMA) {
     *(.rodata .rodata.*)
-    . = ALIGN(4K);
   }
 
-  .text :
-  {
+  .text ALIGN(0x1000): AT(ADDR(.text) - KERNEL_VMA) {
     *(.text .text.*)
-    . = ALIGN(4K);
   }
 
-  .data :
-  {
+  .data ALIGN(0x1000): AT(ADDR(.data) - KERNEL_VMA)  {
     *(.data .data.*)
-    . = ALIGN(4K);
   }
 
-  .bss :
-  {
+  .bss ALIGN(0x1000): AT(ADDR(.bss) - KERNEL_VMA)  {
     *(.bss .bss.*)
-    . = ALIGN(4K);
   }
 
-  .got :
-  {
+  .got ALIGN(0x1000): AT(ADDR(.got) - KERNEL_VMA)  {
     *(.got)
-    . = ALIGN(4K);
   }
 
-  .got.plt :
-  {
+  .got.plt ALIGN(0x1000): AT(ADDR(.got.plt) - KERNEL_VMA)  {
     *(.got.plt)
-    . = ALIGN(4K);
   }
 
-  .data.rel.ro : ALIGN(4K) {
-    *(.data.rel.ro.local*) *(.data.rel.ro .data.rel.ro.*)
-    . = ALIGN(4K);
-  }
-
-  .gcc_except_table : ALIGN(4K) {
-    *(.gcc_except_table)
-    . = ALIGN(4K);
-  }
+  KERNEL_END = (. + 0xFFF)&0xFFFFFFFFFFFFF000;
 }
