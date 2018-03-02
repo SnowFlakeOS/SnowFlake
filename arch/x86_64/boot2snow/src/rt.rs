@@ -4,7 +4,8 @@ use uefi_alloc;
 
 use uefi::status::Result;
 
-use main;
+use boot2snow::init;
+use uefi::status::Status;
 
 fn set_max_mode(output: &mut uefi::text::TextOutput) -> Result<()> {
     let mut max_i = None;
@@ -31,7 +32,7 @@ fn set_max_mode(output: &mut uefi::text::TextOutput) -> Result<()> {
 }
 
 #[no_mangle]
-pub extern "win64" fn _start(handle: uefi::Handle, uefi: &'static mut uefi::system::SystemTable) -> isize {
+pub extern "win64" fn _start(handle: uefi::Handle, uefi: &'static mut uefi::system::SystemTable) -> Status {
     unsafe {
         ::HANDLE = handle;
         ::UEFI = uefi;
@@ -43,7 +44,5 @@ pub extern "win64" fn _start(handle: uefi::Handle, uefi: &'static mut uefi::syst
         uefi_alloc::init(::core::mem::transmute(&mut *::UEFI));
     }
 
-    main();
-
-    0
+    init().unwrap()
 }

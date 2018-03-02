@@ -14,8 +14,6 @@ use kmain;
 #[link_section=".init"]
 #[no_mangle]
 pub extern fn _start(magic: usize, info: *const kernel_proto::Info) {
-    // TODO : Set Virtual Memory
-
     if magic == 0x71FF0EF1 {
         kmain();
     }

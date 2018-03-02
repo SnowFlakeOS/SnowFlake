@@ -47,16 +47,3 @@ pub mod vars;
 pub mod conf;
 
 pub mod boot2snow;
-
-fn main() {
-    let uefi = unsafe { &mut *::UEFI };
-
-    let _ = (uefi.BootServices.SetWatchdogTimer)(0, 0, 0, ptr::null());
-
-    let _ = (uefi.ConsoleOut.SetAttribute)(uefi.ConsoleOut, 0x0F);
-
-    if let Err(err) = boot2snow::init() {
-        println!("Init error: {:?}", err);
-        let _ = io::wait_key();
-	}
-}
