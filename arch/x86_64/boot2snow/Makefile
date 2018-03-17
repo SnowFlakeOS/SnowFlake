@@ -23,25 +23,7 @@ all: $(boot2snow)
 
 $(boot2snow): $(objs)
 	@mkdir -p $(shell dirname $@)
-	@$(LD) \
-		--oformat pei-x86-64 \
-		--dll \
-		--image-base 0 \
-		--section-alignment 32 \
-		--file-alignment 32 \
-		--major-os-version 0 \
-		--minor-os-version 0 \
-		--major-image-version 0 \
-		--minor-image-version 0 \
-		--major-subsystem-version 0 \
-		--minor-subsystem-version 0 \
-		--subsystem 10 \
-		--heap 0,0 \
-		--stack 0,0 \
-		--pic-executable \
-		--entry _start \
-		--no-insert-timestamp \
-		$< -o $@
+	@$(LD) --gc-sections --oformat pei-x86-64 --subsystem 10 -pie -e _start $< -o $@
 	@$(OBJDUMP) -d $@ > $@.dsm
 	@$(STRIP) $@
 

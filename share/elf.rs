@@ -88,7 +88,7 @@ impl ElfFile
 			let ptr = (&self.0 as *const _ as usize + self.0.e_phoff as usize) as *const PhEnt;
 			::core::slice::from_raw_parts( ptr, self.0.e_phnum as usize )
 			};
-		println!("phents() - slice = {:p}+{}", slice.as_ptr(), slice.len());
+		//println!("phents() - slice = {:p}+{}", slice.as_ptr(), slice.len());
 		PhEntIter( slice )
 	}
 	fn shents(&self) -> &[ShEnt] {
@@ -117,7 +117,8 @@ impl<'a> Iterator for PhEntIter<'a> {
 		}
 	}
 }
-struct ShEntIter<'a>(&'a [ShEnt]);
+
+/*struct ShEntIter<'a>(&'a [ShEnt]);
 impl<'a> Iterator for ShEntIter<'a> {
 	type Item = ShEnt;
 	fn next(&mut self) -> Option<ShEnt> {
@@ -129,19 +130,19 @@ impl<'a> Iterator for ShEntIter<'a> {
 			Some(rv)
 		}
 	}
-}
+}*/
 
 pub fn elf_get_size(file_base: &ElfFile) -> usize {
-	println!("elf_get_size(file_base={:p})", file_base);
+	//println!("elf_get_size(file_base={:p})", file_base);
 	file_base.check_header();
 
 	let mut max_end = 0;
 	for phent in file_base.phents() {
 		if phent.p_type == 1 {
-			println!("- {:#x}+{:#x} loads +{:#x}+{:#x}",
+			/*println!("- {:#x}+{:#x} loads +{:#x}+{:#x}",
 				phent.p_paddr, phent.p_memsz,
 				phent.p_offset, phent.p_filesz
-			);
+			);*/
 			
 			let end = (phent.p_paddr + phent.p_memsz) as usize;
 			if max_end < end {
@@ -151,19 +152,24 @@ pub fn elf_get_size(file_base: &ElfFile) -> usize {
 	}
 	// Round the image size to 4KB
 	let max_end = (max_end + 0xFFF) & !0xFFF;
-	println!("return load_size={:#x}", max_end);
+	//println!("return load_size={:#x}", max_end);
+	if max_end == 0 {
+		//println!("ERROR!!! Kernel reported zero loadable size");
+		loop {}
+	}
+	
 	max_end
 }
 
 /// Returns program entry point
 pub fn elf_load_segments(file_base: &ElfFile, output_base: *mut u8) -> usize {
-	println!("elf_load_segments(file_base={:p}, output_base={:p})", file_base, output_base);
+	//println!("elf_load_segments(file_base={:p}, output_base={:p})", file_base, output_base);
 	for phent in file_base.phents() {
 		if phent.p_type == 1 {
-			println!("- {:#x}+{:#x} loads +{:#x}+{:#x}",
+			/*println!("- {:#x}+{:#x} loads +{:#x}+{:#x}",
 				phent.p_paddr, phent.p_memsz,
 				phent.p_offset, phent.p_filesz
-			);
+			);*/
 			
 			let (dst,src) = unsafe {
 				let dst = ::core::slice::from_raw_parts_mut( (output_base as usize + phent.p_paddr as usize) as *mut u8, phent.p_memsz as usize );
@@ -177,7 +183,7 @@ pub fn elf_load_segments(file_base: &ElfFile, output_base: *mut u8) -> usize {
 	}
 
 	let rv = file_base.entrypoint() - 0x80000000 + output_base as usize;
-	println!("return entrypoint={:#x}", rv);
+	//println!("return entrypoint={:#x}", rv);
 	rv
 }
 
@@ -203,12 +209,12 @@ pub struct SymbolInfo {
 
 /// Returns size of data written to output_base
 pub extern "C" fn elf_load_symbols(file_base: &ElfFile, output: &mut SymbolInfo) -> usize {
-	println!("elf_load_symbols(file_base={:p}, output={:p})", file_base, output);
+	//println!("elf_load_symbols(file_base={:p}, output={:p})", file_base, output);
 	*output = SymbolInfo {base: 0 as *const _, count: 0, string_table: 0 as *const _, strtab_len: 0};
 	let mut pos = ::core::mem::size_of::<SymbolInfo>();
 	for ent in file_base.shents() {
 		if ent.sh_type == 2 {
-			println!("Symbol table at +{:#x}+{:#x}, string table {}", ent.sh_offset, ent.sh_size, ent.sh_link);
+			//println!("Symbol table at +{:#x}+{:#x}, string table {}", ent.sh_offset, ent.sh_size, ent.sh_link);
 			let strtab = file_base.shents()[ent.sh_link as usize];
 			let strtab_bytes = unsafe { ::core::slice::from_raw_parts( (file_base as *const _ as usize + strtab.sh_offset as usize) as *const u8, strtab.sh_size as usize ) };
 			//println!("- strtab = {:?}", ::core::str::from_utf8(strtab_bytes));
@@ -240,6 +246,6 @@ pub extern "C" fn elf_load_symbols(file_base: &ElfFile, output: &mut SymbolInfo)
 		}
 	}
 
-	println!("- output = {:?}", output);
+	//println!("- output = {:?}", output);
 	pos
 }

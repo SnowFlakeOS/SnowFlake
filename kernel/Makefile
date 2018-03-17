@@ -6,6 +6,7 @@ AS = $(arch)-elf-as
 AR = $(arch)-elf-ar
 STRIP = $(arch)-elf-strip
 OBJDUMP = $(arch)-elf-objdump
+OBJCOPY = $(arch)-elf-objcopy
 CARGO = xargo
 
 BUILD_DIR = ../build/kernel
@@ -22,6 +23,7 @@ $(kernel): $(kernel_obj)
 	@mkdir -p $(shell dirname $@)
 	@$(LD) -n --gc-sections -T $(linker_script) $< -o $@ -z max-page-size=0x1000
 	@$(OBJDUMP) -d $@ > $@.dsm
+	@$(OBJCOPY) --only-keep-debug $@ $@.sym
 	@$(STRIP) -g $@
 
 $(kernel_obj):

@@ -5,3 +5,4 @@ sudo ln -s /usr/bin/as /usr/bin/x86_64-elf-as
 sudo ln -s /usr/bin/ar /usr/bin/x86_64-elf-ar
 sudo ln -s /usr/bin/strip /usr/bin/x86_64-elf-strip
 sudo ln -s /usr/bin/objdump /usr/bin/x86_64-elf-objdump
+sudo ln -s /usr/bin/objcopy /usr/bin/x86_64-elf-objcopy

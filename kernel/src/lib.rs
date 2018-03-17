@@ -4,22 +4,13 @@
 #![feature(try_trait)]
 #![feature(asm)]
 #![feature(const_fn)]
+#![feature(global_asm)]
 
 extern crate x86;
 
 use core::ptr;
 
-pub mod rt;
-pub mod snowkernel;
-
-fn kmain() {
-    /* if let Err(err) = snowkernel::init() {
-        println!("Init error: {:?}", err);
-        let _ = io::wait_key();
-    } */
-
-    loop {}
-}
+pub mod kmain;
 
 #[lang = "panic_fmt"] // define a function that should be called on panic
 #[no_mangle] // TODO required?
