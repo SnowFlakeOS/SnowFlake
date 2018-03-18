@@ -7,6 +7,7 @@ authors = ["xuserwhat <quicknshell@gmail.com>"]
 uefi = { git = "https://github.com/SnowFlakeOS/rust-uefi", branch = "beta" }
 rlibc = "1.0"
 compiler_builtins = { git = "https://github.com/rust-lang-nursery/compiler-builtins" }
+utf16_literal = { path = "../../../share/utf16_literal" }
 
 [lib]
 name = "Boot2Snow"

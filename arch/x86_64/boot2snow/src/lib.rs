@@ -4,10 +4,14 @@
 #![feature(lang_items)]
 #![feature(compiler_builtins_lib)]
 #![feature(try_trait)]
+#![feature(use_extern_macros)]
 
 extern crate uefi;
 extern crate rlibc;
 extern crate compiler_builtins;
+
+#[macro_use]
+extern crate utf16_literal;
 
 use core::ops::Try;
 use uefi::{SimpleTextOutput, 

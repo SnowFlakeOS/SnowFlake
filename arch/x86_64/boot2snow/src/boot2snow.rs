@@ -14,6 +14,7 @@ use uefi::{SimpleTextOutput,
                 AllocateType, 
                 MemoryType,
                 File,
+                MemoryDescriptor,
                 get_system_table,
                 get_handle,
                 lib_memory_map};
@@ -74,9 +75,9 @@ pub extern fn init() -> Result<(), ()> {
     let resolutin_w : usize = info.horizontal_resolution as usize;
     let resolutin_h : usize = info.vertical_resolution as usize;
     let AREA : usize = resolutin_w * resolutin_h;
-    
+    let bitmap = bs.allocate_pool::<Pixel>(mem::size_of::<Pixel>() * AREA).unwrap();    
+
     {
-        let bitmap = bs.allocate_pool::<Pixel>(mem::size_of::<Pixel>() * AREA).unwrap();
         let mut c = RGB::new();
         c.hsv2rgb(255, 255, 255);
         let px = Pixel::new(c.r,c.g,c.b);
@@ -102,12 +103,29 @@ pub extern fn init() -> Result<(), ()> {
 
     let simple_vol = simple_fs.open_volume().expect("Sorry, simple_fs.open_volume() Failed :(");
 
-    //let kernel_file = load_kernel_file(simple_vol, "/boot2snow/kernel.bin");
+    let kernel_file = load_kernel_file(simple_vol, ::utf16_literal::utf16!("\\boot2snow\\kernel.bin")).unwrap();
 
     let (memory_map, memory_map_size, map_key, descriptor_size, descriptor_version) = ::uefi::lib_memory_map();
     let _ = bs.exit_boot_services(::uefi::get_handle(), &map_key);
     let _ = rs.set_virtual_address_map(&memory_map_size, &descriptor_size, &descriptor_version, memory_map);
 
+    let boot_info = kernel_proto::Info {
+			runtime_services: rs as *const _ as *const (),
+			
+			// TODO: Get from the configuration
+			cmdline_ptr: 1 as *const u8,
+			cmdline_len: 0,
+			
+			map_addr: /* memory_map */ 0 as usize as u64,
+			map_entnum: (memory_map_size / descriptor_size) as u32,
+			map_entsz: size_of::<MemoryDescriptor>() as u32,
+
+            vid_addr: bitmap as usize as u64,
+            width: resolutin_w,
+            height: resolutin_h,
+    };
+
+    kernel_file(0x71FF0EF1, &boot_info);
     Ok(())
 }
 

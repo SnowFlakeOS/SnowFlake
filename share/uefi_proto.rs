@@ -11,6 +11,6 @@ pub struct Info
 	pub map_entsz: u32,
 
 	pub vid_addr: u64,
-	pub width: u32,
-	pub height: u32
+	pub width: usize,
+	pub height: usize
 }
