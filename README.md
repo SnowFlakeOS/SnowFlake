@@ -8,6 +8,11 @@
 
 Technology is free, SnowFlakeOS
 
+## Library used
+- utf16_literal (https://github.com/thepowersgang/rust_os/tree/master/Bootloaders/libuefi/utf16_literal)
+- uefi (forked, https://github.com/SnowFlakeOS/rust-uefi)
+- x86 (https://github.com/gz/rust-x86)
+
 ## TODO
 ### Boot2Snow (x86_64, UEFI)
 - [x] Basical UI (from https://github.com/system76/firmware-update)
