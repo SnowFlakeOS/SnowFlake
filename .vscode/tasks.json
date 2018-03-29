@@ -13,6 +13,7 @@
             }
         },
         {
+<<<<<<< HEAD
             "taskName": "make run-debug",
             "type": "shell",
             "command": "make run-debug",
@@ -22,6 +23,8 @@
             }
         },
         {
+=======
+>>>>>>> 54b2b70a2ee02e4ffea5b8eb418a797a006e9595
             "taskName": "make clean",
             "type": "shell",
             "command": "make clean",
@@ -40,6 +43,7 @@
             }
         },
         {
+<<<<<<< HEAD
             "taskName": "x86_64-linux env",
             "type": "shell",
             "command": "sh x86_64-linux_env.sh",
@@ -48,6 +52,15 @@
             "taskName": "gdb",
             "type": "shell",
             "command": "rust-gdb build/kernel/kernel.bin.sym -ex 'target remote :1234'",
+=======
+            "taskName": "sh x86_64-linux_env.sh",
+            "type": "shell",
+            "command": "sh x86_64-linux_env.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+>>>>>>> 54b2b70a2ee02e4ffea5b8eb418a797a006e9595
         }
     ]
 }

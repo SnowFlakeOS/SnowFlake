@@ -88,6 +88,7 @@ pub extern fn init() -> Result<(), ()> {
 			cmdline_ptr: 1 as *const u8,
 			cmdline_len: 0,
 			
+<<<<<<< HEAD
 			map_addr: map.as_ptr() as usize as u64,
 			map_entnum: map.len() as u32,
 			map_entsz: size_of::<MemoryDescriptor>() as u32,
@@ -111,10 +112,35 @@ fn load_kernel_file(boot_services: &::uefi::boot_services::BootServices, sys_vol
 		Err(e) => panic!("Failed to open kernel '{}' - {:?}", filename, e),
 	};
 
+=======
+			map_addr: /* memory_map */ 0 as usize as u64,
+			map_entnum: (memory_map_size / descriptor_size) as u32,
+			map_entsz: size_of::<MemoryDescriptor>() as u32,
+
+            vid_addr: bitmap as usize as u64,
+            width: resolutin_w,
+            height: resolutin_h,
+    };
+
+    kernel_file(0x71FF0EF1, &boot_info);
+    Ok(())
+}
+
+type EntryPoint = extern "cdecl" fn(usize, *const kernel_proto::Info) -> !;
+fn load_kernel_file(simple_vol: &File, filename: &[u16]) -> Result<EntryPoint, ()> {
+    let bs = get_system_table().boot_services();
+    
+    let mut kernel_file = match simple_vol.open_read(filename) {
+		Ok(k) => k,
+		Err(e) => panic!("Failed to open kernel '{:?}' - {:?}", filename, e),
+    };
+ 
+>>>>>>> 54b2b70a2ee02e4ffea5b8eb418a797a006e9595
 	// Load kernel from this file (ELF).
 	let elf_hdr = {
 		let mut hdr = elf::ElfHeader::default();
 		// SAFE: Converts to POD for read
+<<<<<<< HEAD
 		kernel_file.read( unsafe { ::core::slice::from_raw_parts_mut( &mut hdr as *mut _ as *mut u8, size_of::<elf::ElfHeader>() ) } ).expect("ElfHeader read");
 		hdr
 	};
@@ -148,12 +174,47 @@ fn load_kernel_file(boot_services: &::uefi::boot_services::BootServices, sys_vol
 			let data_slice = unsafe { ::core::slice::from_raw_parts_mut(ent.p_paddr as usize as *mut u8, ent.p_memsz as usize) };
 			kernel_file.set_position(ent.p_offset as u64).expect("seek segment");
 			kernel_file.read( &mut data_slice[.. ent.p_filesz as usize] ).expect("read segment");
+=======
+		let _ = kernel_file.read( unsafe { ::core::slice::from_raw_parts_mut( &mut hdr as *mut _ as *mut u8, size_of::<elf::ElfHeader>() ) } ).expect("Fail to read ElfHeader :(");
+		hdr
+	};
+    
+	elf_hdr.check_header();
+	for i in 0 .. elf_hdr.e_phnum {
+		let mut ent = elf::PhEnt::default();
+		let _ = kernel_file.set_position(elf_hdr.e_phoff as u64 + (i as usize * size_of::<elf::PhEnt>()) as u64 ).unwrap();
+		// SAFE: Converts to POD for read
+		let _ = kernel_file.read( unsafe { ::core::slice::from_raw_parts_mut( &mut ent as *mut _ as *mut u8, size_of::<elf::PhEnt>() ) } ).expect("Fail to read Kernel :(");
+
+		if ent.p_type == 1 {
+            println!("- {:#x}+{:#x} loads +{:#x}+{:#x}",
+				ent.p_vaddr, ent.p_memsz,
+				ent.p_offset, ent.p_filesz
+            );
+
+			let mut addr = ent.p_vaddr as u64;
+			// SAFE: Correct call to FFI
+			let _ = bs.allocate_pages(
+				            AllocateType::Address,
+				            MemoryType::LoaderData,
+				            (ent.p_memsz + 0xFFF) as usize / 0x1000,
+				            &mut addr);
+			
+			// SAFE: This memory has just been allocated by the above
+			let data_slice = unsafe { ::core::slice::from_raw_parts_mut(ent.p_vaddr as usize as *mut u8, ent.p_memsz as usize) };
+			let _ = kernel_file.set_position(ent.p_offset as u64);
+			let _ = kernel_file.read( &mut data_slice[.. ent.p_filesz as usize] );
+>>>>>>> 54b2b70a2ee02e4ffea5b8eb418a797a006e9595
 			for b in &mut data_slice[ent.p_filesz as usize .. ent.p_memsz as usize] {
 				*b = 0;
 			}
 		}
 	}
 	// SAFE: Assuming that the executable is sane, and that it follows the correct calling convention
+<<<<<<< HEAD
 	Ok(unsafe { ::core::mem::transmute(elf_hdr.e_entry as usize) })
+=======
+	Ok(unsafe { ::core::mem::transmute(elf_hdr.e_entry as u64) })
+>>>>>>> 54b2b70a2ee02e4ffea5b8eb418a797a006e9595
 }
 
