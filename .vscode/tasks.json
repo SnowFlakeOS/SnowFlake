@@ -1,0 +1,53 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "taskName": "make run",
+            "type": "shell",
+            "command": "make run",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "taskName": "make run-debug",
+            "type": "shell",
+            "command": "make run-debug",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "taskName": "make clean",
+            "type": "shell",
+            "command": "make clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "taskName": "make all",
+            "type": "shell",
+            "command": "make all",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "taskName": "x86_64-linux env",
+            "type": "shell",
+            "command": "sh x86_64-linux_env.sh",
+        },
+        {
+            "taskName": "gdb",
+            "type": "shell",
+            "command": "rust-gdb build/kernel/kernel.bin.sym -ex 'target remote :1234'",
+        }
+    ]
+}

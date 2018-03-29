@@ -1,0 +1,14 @@
+[package]
+name = "Boot2Snow"
+version = "0.1.0"
+authors = ["xuserwhat <quicknshell@gmail.com>"]
+
+[dependencies]
+uefi = {path = "../../../share/libuefi"}
+rlibc = "1.0"
+compiler_builtins = { git = "https://github.com/rust-lang-nursery/compiler-builtins" }
+utf16_literal = "0.1.0"
+
+[lib]
+name = "Boot2Snow"
+crate-type = ["staticlib"]
