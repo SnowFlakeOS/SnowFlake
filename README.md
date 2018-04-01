@@ -10,21 +10,21 @@ Technology is free, SnowFlakeOS
 
 ## Library used
 - utf16_literal (https://github.com/thepowersgang/rust_os/tree/master/Bootloaders/libuefi/utf16_literal)
-- uefi (forked, https://github.com/SnowFlakeOS/rust-uefi)
-- x86 (https://github.com/gz/rust-x86)
+- uefi (forked, https://github.com/thepowersgang/rust_os/tree/master/Bootloaders/libuefi)
 
 ## TODO
 ### Boot2Snow (x86_64, UEFI)
 - [x] Basical UI (from https://github.com/system76/firmware-update)
 - [x] Load kernel from disk
-### SnowKernel (ExoKernel)
-- [ ] Load kernel as higher half (0xffffffff80000000)
+- [ ] Set virtual memory map
+### SnowKernel
 - [ ] Better GUI library support
+- [ ] Write elf loader
 - [ ] Write I/O drivers (keyboard, mouse, etc.)
 - [ ] Multitasking support
 - [ ] Write syscall
 - [ ] Write init process
-### FlakeOS (LibOS)
+### FlakeOS
 
 ## Building
 Requirements to build
@@ -36,22 +36,7 @@ Requirements to build
 Will be added later
 
 ### Mac
-The default linker of the macOS is BSD linker so it can't linked Snowflake.
-If you want build SnowFlake on macOS
-- Need HomeBrew (https://brew.sh/)
-- Need Xcode Command Line Tools (This will install both HomeBrew)
-- Need NASM (can install in HomeBrew)
-- Need QEMU (if you want run SnowFlake)
-```
-$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-$ homebrew install nasm qemu crystal
-$ git clone https://github.com/SnowFlake/mac-binutils-script.git
-$ cd mac-binutils-script
-$ sudo ./compile.sh
-$ git clone https://github.com/SnowFlake/SnowFlake.git
-$ cd SnowWhite
-$ make run
-```
+Will be added later
 
 ### Linux
 To build SnowFlake as an x86_64 target, x86_64-elf cross-compilation is required.
@@ -67,13 +52,9 @@ $ cd SnowWhite
 $ make run
 ```
 
-## Thanks to
+## Reference
 - https://github.com/phil-opp/blog_os
-- https://github.com/beevik/MonkOS
 - https://github.com/thepowersgang/rust_os
-- https://github.com/wichtounet/thor-os
-- https://github.com/anchovieshat/cathode
-- https://github.com/TheKernelCorp/NuummiteOS
 - https://github.com/redox-os/orbclient
 - https://github.com/redox-os/uefi
 - https://github.com/system76/firmware-update
