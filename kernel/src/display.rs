@@ -100,7 +100,7 @@ impl Display {
 
     fn inner_pixel(&mut self, x: i32, y: i32, color: Color) {
         let w = self.w;
-        unsafe { *self.output.offset((w as i32 * y + x) as isize) = color };
+        unsafe { *self.output.offset((w as isize * y as isize) + x as isize) = color };
     }
 
     fn inner_rect(&mut self, x: i32, y: i32, w: u32, h: u32, color: Color) {

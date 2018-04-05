@@ -25,7 +25,7 @@ pub struct Stdout;
 impl Write for Stdout {
     fn write_str(&mut self, string: &str) -> Result<(), fmt::Error> {
         let console = get_console();
-        unsafe { (*console).write(string) };
+        unsafe { (*console).write(string, Color::rgb(255, 255, 255)) };
         Ok(())
     }
 }
@@ -49,13 +49,13 @@ impl Console {
         }
     }
 
-    pub fn write(&mut self, s: &str) {
+    pub fn write(&mut self, s: &str, color: Color) {
         let display = unsafe{ DISPLAY };
         let prompt = s.clone();
 
         for c in prompt.chars() {
             if self.x == self.w as i32 || c == '\n' { self.newline(); } else {
-                unsafe { (*display).char(self.x, self.y, c, Color::rgb(255, 255, 255)) };
+                unsafe { (*display).char(self.x, self.y, c, color) };
                 self.x += 8;
             }
         }

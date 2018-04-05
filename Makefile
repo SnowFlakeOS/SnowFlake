@@ -19,7 +19,7 @@ clean:
 	@rm -r build #target
 
 run: $(img)
-	@qemu-system-x86_64 -bios ovmf.fd $(img)
+	@qemu-system-x86_64 -bios ovmf.fd -m 2048 $(img)
 
 run-debug: $(img)
 	@qemu-system-x86_64 -s -S -bios ovmf.fd $(img)

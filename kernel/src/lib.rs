@@ -6,6 +6,9 @@
 #![feature(const_fn)]
 #![feature(global_asm)]
 
+#[macro_use]
+extern crate bitflags;
+extern crate x86_64;
 extern crate uefi;
 
 use core::ptr;
