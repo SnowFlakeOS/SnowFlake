@@ -1,6 +1,7 @@
 # ![SnowFlake](./logo.png)
 
 [![BSD-3-Clause][s1]][li]
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FSnowFlakeOS%2FSnowFlake.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FSnowFlakeOS%2FSnowFlake?ref=badge_shield)
 
 [s1]: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
 
@@ -58,3 +59,7 @@ $ make run
 - https://github.com/redox-os/orbclient
 - https://github.com/redox-os/uefi
 - https://github.com/system76/firmware-update
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FSnowFlakeOS%2FSnowFlake.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FSnowFlakeOS%2FSnowFlake?ref=badge_large)
