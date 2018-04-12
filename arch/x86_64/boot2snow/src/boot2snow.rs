@@ -82,6 +82,12 @@ pub extern fn init() -> Result<(), ()> {
 			(runtime_services.set_virtual_address_map)(map_size, ent_size, ent_ver, map.as_ptr()).expect("Sorry, set_virtual_address_map() failed :(");
 		}
 
+		let video_info = kernel_proto::VideoInfo {
+			physbaseptr: gop.mode.frame_buffer_base as *mut Color,
+			xresolution: unsafe { (*gop.mode.info).horizontal_resolution },
+			yresolution: unsafe { (*gop.mode.info).vertical_resolution }
+		};
+
 		let boot_info = kernel_proto::Info {
 			runtime_services: runtime_services as *const _ as *const (),
 			
@@ -93,9 +99,7 @@ pub extern fn init() -> Result<(), ()> {
 			map_entnum: map.len() as u32,
 			map_entsz: size_of::<MemoryDescriptor>() as u32,
 
-            vid_addr: gop.mode.frame_buffer_base as *mut Color,
-            width: unsafe { (*gop.mode.info).horizontal_resolution },
-            height: unsafe { (*gop.mode.info).vertical_resolution }
+            video_info: &video_info
 		};
 		
 		// - Execute kernel (passing a magic value and general boot information)

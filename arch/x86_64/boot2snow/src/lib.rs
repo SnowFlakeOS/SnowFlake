@@ -1,9 +1,13 @@
-#![feature(lang_items)]
+#![no_std]
+#![feature(alloc)]
 #![feature(asm)]
-#![feature(proc_macro)]
-#![feature(try_trait)]
+#![feature(compiler_builtins_lib)]
 #![feature(const_fn)]
-#![no_std] 
+#![feature(core_intrinsics)]
+#![feature(global_allocator)]
+#![feature(lang_items)]
+#![feature(try_trait)]
+#![feature(proc_macro)]
 
 use core::ops::Try;
 use core::mem;
@@ -19,7 +23,10 @@ use uefi::{SimpleTextOutputInterface,
 				Status};
 
 #[macro_use]
+extern crate alloc;
+extern crate compiler_builtins;
 extern crate uefi;
+extern crate uefi_alloc;
 extern crate utf16_literal;
 
 #[macro_use]
@@ -30,6 +37,7 @@ pub mod panic;
 mod boot2snow;
 mod conf;
 mod io;
+mod string;
 
 #[path="../../../../share/elf.rs"]
 mod elf;
@@ -39,6 +47,9 @@ mod kernel_proto;
 
 #[path="../../../../share/color.rs"]
 mod color;
+
+#[global_allocator]
+static ALLOCATOR: uefi_alloc::Allocator = uefi_alloc::Allocator;
 
 static PATH_CONFIG: &'static [u16] = utf16!("boot2snow\\boot2snow.conf\0");
 static PATH_FALLBACK_KERNEL: &'static [u16] = utf16!("boot2snow\\kernel.bin\0");
@@ -124,6 +135,8 @@ pub extern "win64" fn _start(image_handle: Handle, system_table: &SystemTable) -
 		S_IMAGE_HANDLE = image_handle;
 		S_BOOT_SERVICES = system_table.boot_services;
         S_RUNTIME_SERVICES = system_table.runtime_services;
+
+		uefi_alloc::init(::core::mem::transmute(&mut get_boot_services()));
 	}
 
 	let gop = GraphicsOutput::new(get_boot_services()).unwrap();
@@ -148,23 +161,3 @@ pub extern "win64" fn _start(image_handle: Handle, system_table: &SystemTable) -
     SUCCESS
 }
 
-#[no_mangle]
-pub extern "C" fn memcpy(dst: *mut u8, src: *const u8, count: usize) {
-	unsafe {
-		asm!("rep movsb" : : "{rcx}" (count), "{rdi}" (dst), "{rsi}" (src) : "rcx", "rsi", "rdi" : "volatile");
-	}
-}
-#[no_mangle]
-pub extern "C" fn memset(dst: *mut u8, val: u8, count: usize) {
-	unsafe {
-		asm!("rep stosb" : : "{rcx}" (count), "{rdi}" (dst), "{al}" (val) : "rcx", "rdi" : "volatile");
-	}
-}
-#[no_mangle]
-pub extern "C" fn memcmp(dst: *mut u8, src: *const u8, count: usize) -> isize {
-	unsafe {
-		let rv: isize;
-		asm!("repnz cmpsb ; movq $$0, $0 ; ja 1f; jb 2f; jmp 3f; 1: inc $0 ; jmp 3f; 2: dec $0; 3:" : "=r" (rv) : "{rcx}" (count), "{rdi}" (dst), "{rsi}" (src) : "rcx", "rsi", "rdi" : "volatile");
-		rv
-	}
-}

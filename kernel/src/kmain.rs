@@ -13,16 +13,17 @@ extern {
 #[no_mangle]
 pub extern fn start_uefi() {
     let magic = unsafe { _magic };
-    let info = unsafe { _info };
+    let info = unsafe { &*_info };
+    let video_info = unsafe { &*(*info).video_info };
 
-    let resolutin_w = unsafe { (*info).width };
-    let resolutin_h = unsafe { (*info).height };
+    let resolutin_w = video_info.xresolution;
+    let resolutin_h = video_info.yresolution;
     let AREA = resolutin_w * resolutin_h;
 
-    let vid_addr = unsafe { (*info).vid_addr };
+    let vid_addr = video_info.physbaseptr;
     let mut display = Display::new(vid_addr, resolutin_w, resolutin_h);
     let mut console = Console::new(&mut display);
-    let map = unsafe { (*info).map_addr } as *const MemoryDescriptor;
+    let map = info.map_addr as *const MemoryDescriptor;
     set_console(&mut console);
 
     enable_nxe_bit();

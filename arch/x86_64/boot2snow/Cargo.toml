@@ -3,10 +3,14 @@ name = "Boot2Snow"
 version = "0.1.0"
 authors = ["xuserwhat <quicknshell@gmail.com>"]
 
+[dependencies.compiler_builtins]
+git = "https://github.com/rust-lang-nursery/compiler-builtins"
+features = ["mem"]
+
 [dependencies]
-uefi = {path = "../../../share/libuefi"}
+uefi = {path = "../../../share/uefi"}
+uefi_alloc = {path = "../../../share/uefi_alloc"}
 rlibc = "1.0"
-compiler_builtins = { git = "https://github.com/rust-lang-nursery/compiler-builtins" }
 utf16_literal = "0.1.0"
 
 [lib]

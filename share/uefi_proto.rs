@@ -2,8 +2,7 @@ mod color;
 use color::*;
 
 #[repr(C)]
-pub struct Info
-{
+pub struct Info {
 	pub runtime_services: *const (),
 
 	pub cmdline_ptr: *const u8,
@@ -13,9 +12,14 @@ pub struct Info
 	pub map_entnum: u32,
 	pub map_entsz: u32,
 
-	pub vid_addr: *mut Color,
-	pub width: u32,
-	pub height: u32
+	pub video_info: *const VideoInfo,
+}
+
+#[repr(C)]
+pub struct VideoInfo {
+	pub physbaseptr: *mut Color,
+	pub xresolution: u32,
+	pub yresolution: u32
 }
 
 // TODO: Grab this from libuefi
