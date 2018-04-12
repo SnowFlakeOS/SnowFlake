@@ -15,17 +15,24 @@ Technology is free, SnowFlakeOS
 
 ## TODO
 ### Boot2Snow (x86_64, UEFI)
-- [x] Basical UI (from https://github.com/system76/firmware-update)
+- [x] Add uefi_alloc support
 - [x] Load kernel from disk
-- [ ] Set virtual memory map
+- [x] Set virtual memory map
+- [ ] Basical UI
+- [ ] Enable boot timeout
+- [ ] Add fs.rs (Filesystem)
 ### SnowKernel
+- [ ] Add alloc support
 - [ ] Better GUI library support
-- [ ] Write elf loader
-- [ ] Write I/O drivers (keyboard, mouse, etc.)
+- [ ] Add modular support
 - [ ] Multitasking support
-- [ ] Write syscall
 - [ ] Write init process
-### FlakeOS
+#### Kernel Modules
+- [ ] Drivers
+- [ ] IPC
+- [ ] System calls
+- [ ] File system
+- [ ] VFS
 
 ## Building
 Requirements to build
@@ -54,12 +61,11 @@ $ make run
 ```
 
 ## Reference
-- https://github.com/phil-opp/blog_os
-- https://github.com/thepowersgang/rust_os
-- https://github.com/redox-os/orbclient
-- https://github.com/redox-os/uefi
+- https://github.com/phil-opp/blog_os (MIT OR Apache 2.0 License)
+- https://github.com/thepowersgang/rust_os (2-clause BSD licence)
+- https://github.com/redox-os/orbclient (MIT License)
+- https://github.com/redox-os/uefi (MIT License)
 - https://github.com/system76/firmware-update
-
 
 ## License
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FSnowFlakeOS%2FSnowFlake.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FSnowFlakeOS%2FSnowFlake?ref=badge_large)

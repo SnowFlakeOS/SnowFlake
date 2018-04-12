@@ -1,6 +1,6 @@
 [package]
 name = "Boot2Snow"
-version = "0.1.0"
+version = "0.1.0-Hydrogen"
 authors = ["xuserwhat <quicknshell@gmail.com>"]
 
 [dependencies.compiler_builtins]
