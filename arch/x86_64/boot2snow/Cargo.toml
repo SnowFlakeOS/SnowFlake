@@ -8,8 +8,8 @@ git = "https://github.com/rust-lang-nursery/compiler-builtins"
 features = ["mem"]
 
 [dependencies]
-uefi = {path = "../../../share/uefi"}
-uefi_alloc = {path = "../../../share/uefi_alloc"}
+uefi = {git = "https://github.com/SnowFlakeOS/uefi"}
+uefi_alloc = {git = "https://github.com/SnowFlakeOS/uefi_alloc"}
 rlibc = "1.0"
 utf16_literal = "0.1.0"
 

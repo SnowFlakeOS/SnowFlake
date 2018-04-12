@@ -12,4 +12,4 @@ volatile = "0.1.0"
 spin = "0.4.5"
 x86_64 = "0.1.2"
 bitflags = "1.0.1"
-uefi = {path = "../share/uefi"}
+uefi = {git = "https://github.com/SnowFlakeOS/uefi"}
