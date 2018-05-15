@@ -1,7 +1,8 @@
+//! Some code was borrowed from [Tifflin Bootloader](https://github.com/thepowersgang/rust_os)
+
 #![no_std]
 #![feature(alloc)]
 #![feature(asm)]
-#![feature(compiler_builtins_lib)]
 #![feature(const_fn)]
 #![feature(core_intrinsics)]
 #![feature(global_allocator)]
@@ -23,10 +24,13 @@ use uefi::{SimpleTextOutputInterface,
 				Status};
 
 #[macro_use]
+extern crate bitflags;
+
+#[macro_use]
 extern crate alloc;
-extern crate compiler_builtins;
 extern crate uefi;
 extern crate uefi_alloc;
+extern crate x86_64;
 extern crate utf16_literal;
 
 #[macro_use]
@@ -38,14 +42,16 @@ mod boot2snow;
 mod conf;
 mod io;
 mod string;
+mod memory_map;
+mod paging;
 
-#[path="../../../../share/elf.rs"]
+#[path="../../share/elf.rs"]
 mod elf;
 
-#[path="../../../../share/uefi_proto.rs"]
+#[path="../../share/uefi_proto.rs"]
 mod kernel_proto;
 
-#[path="../../../../share/color.rs"]
+#[path="../../share/color.rs"]
 mod color;
 
 #[global_allocator]
@@ -61,7 +67,7 @@ static mut S_RUNTIME_SERVICES: *const RuntimeServices = 0 as *const _;
 static mut S_GRAPHICS_OUTPUT: *const GraphicsOutput = 0 as *const _;
 static mut S_IMAGE_HANDLE: Handle = 0 as *mut _;
 
-pub type EntryPoint = extern "cdecl" fn(usize, *const kernel_proto::Info) -> !;
+pub type EntryPoint = extern "C" fn(usize, *const kernel_proto::Info) -> !;
 
 pub fn get_conout() -> &'static SimpleTextOutputInterface {
 	unsafe { &*S_CONOUT }
@@ -142,12 +148,12 @@ pub extern "win64" fn _start(image_handle: Handle, system_table: &SystemTable) -
 	let gop = GraphicsOutput::new(get_boot_services()).unwrap();
 
 	{
-		if let Err(err) = set_text_mode(system_table.con_out).into_result() {
-        	println!("Sorry, set_text_mode() Failed :( {:?}", err); 
-    	}
-
 		if let Err(err) = set_graphics_mode(gop).into_result() {
         	println!("Sorry, set_graphics_mode() Failed :( {:?}", err); 
+    	}
+
+		if let Err(err) = set_text_mode(system_table.con_out).into_result() {
+        	println!("Sorry, set_text_mode() Failed :( {:?}", err); 
     	}
 
 		unsafe { S_GRAPHICS_OUTPUT = gop };
@@ -161,3 +167,25 @@ pub extern "win64" fn _start(image_handle: Handle, system_table: &SystemTable) -
     SUCCESS
 }
 
+#[no_mangle]
+pub extern "C" fn memcpy(dst: *mut u8, src: *const u8, count: usize) {
+	unsafe {
+		asm!("rep movsb" : : "{rcx}" (count), "{rdi}" (dst), "{rsi}" (src) : "rcx", "rsi", "rdi" : "volatile");
+	}
+}
+
+#[no_mangle]
+pub extern "C" fn memset(dst: *mut u8, val: u8, count: usize) {
+	unsafe {
+		asm!("rep stosb" : : "{rcx}" (count), "{rdi}" (dst), "{al}" (val) : "rcx", "rdi" : "volatile");
+	}
+}
+
+#[no_mangle]
+pub extern "C" fn memcmp(dst: *mut u8, src: *const u8, count: usize) -> isize {
+	unsafe {
+		let rv: isize;
+		asm!("repnz cmpsb ; movq $$0, $0 ; ja 1f; jb 2f; jmp 3f; 1: inc $0 ; jmp 3f; 2: dec $0; 3:" : "=r" (rv) : "{rcx}" (count), "{rdi}" (dst), "{rsi}" (src) : "rcx", "rsi", "rdi" : "volatile");
+		rv
+	}
+}

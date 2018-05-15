@@ -1,3 +1,5 @@
+//! Some code was borrowed from [System76 Firmware Update](https://github.com/system76/firmware-update)
+
 use alloc::{String, Vec};
 use core::char;
 

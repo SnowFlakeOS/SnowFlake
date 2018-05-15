@@ -1,15 +1,17 @@
 
 {
-    "llvm-target": "x86_64-unknown-none",
+    "linker": "false",
+    "linker-flavor": "ld",
+    "llvm-target": "x86_64-efi-pe",
     "target-endian": "little",
     "target-pointer-width": "64",
     "target-c-int-width": "32",
     "data-layout": "e-m:e-i64:64-f80:128-n8:16:32:64-S128",
     "arch": "x86_64",
-    "os": "none",
-    "env": "",
+    "os": "efi",
+    "env": "pe",
     "vendor": "unknown",
-    "linker-flavor": "gcc",
+    "target-family": "none",
     "pre-link-args": ["-m64", "-nostdlib", "-static"],
     "features": "-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2,+soft-float",
     "dynamic-linking": false,
@@ -22,6 +24,6 @@
     "has-rpath": false,
     "no-compiler-rt": true,
     "no-default-libraries": true,
-    "position-independent-executables": false,
-    "has-elf-tls": true
+    "position-independent-executables": true,
+    "has-elf-tls": false
 }

@@ -2,75 +2,96 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-pub type Elf32_Half = u16;
-pub type Elf32_Addr = u32;
-pub type Elf32_Off = u32;
-pub type Elf32_Sword = i32;
-pub type Elf32_Word = u32;
+pub type Elf64_Half = u16;
+pub type Elf64_Addr = u64;
+pub type Elf64_Off = u64;
+pub type Elf64_Sword = i32;
+pub type Elf64_Word = u32;
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Copy, Clone, Default)]
 pub struct ElfHeader {
 	pub e_ident: [u8; 16],
-	pub e_object_type: Elf32_Half,
-	pub e_machine_type: Elf32_Half,
-	pub e_version: Elf32_Word,
+	pub e_object_type: Elf64_Half,
+	pub e_machine_type: Elf64_Half,
+	pub e_version: Elf64_Word,
 
-	pub e_entry: Elf32_Addr,
-	pub e_phoff: Elf32_Off,
-	pub e_shoff: Elf32_Off,
+	pub e_entry: Elf64_Addr,
+	pub e_phoff: Elf64_Off,
+	pub e_shoff: Elf64_Off,
 
-	pub e_flags: Elf32_Word,
-	pub e_ehsize: Elf32_Half,
+	pub e_flags: Elf64_Word,
+	pub e_ehsize: Elf64_Half,
 
-	pub e_phentsize: Elf32_Half,
-	pub e_phnum: Elf32_Half,
+	pub e_phentsize: Elf64_Half,
+	pub e_phnum: Elf64_Half,
 
-	pub e_shentsize: Elf32_Half,
-	pub e_shnum: Elf32_Half,
-	pub e_shstrndx: Elf32_Half,
+	pub e_shentsize: Elf64_Half,
+	pub e_shnum: Elf64_Half,
+	pub e_shstrndx: Elf64_Half,
 }
+
 impl ElfHeader {
 	pub fn check_header(&self) {
-		assert_eq!(&self.e_ident[..8], b"\x7FELF\x01\x01\x01\x00");	// Elf32, LSB, Version, Pad
+		assert_eq!(&self.e_ident[..8], b"\x7FELF\x02\x01\x01\x00");	// Elf64, LSB, Version, Pad
 		assert_eq!(self.e_version, 1);
 	}
 }
+
 #[repr(C)]
-#[derive(Copy,Clone,Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct PhEnt {
-	pub p_type: Elf32_Word,
-	pub p_offset: Elf32_Off,
-	pub p_vaddr: Elf32_Addr,
-	pub p_paddr: Elf32_Addr,	// aka load
-	pub p_filesz: Elf32_Word,
-	pub p_memsz: Elf32_Word,
-	pub p_flags: Elf32_Word,
-	pub p_align: Elf32_Word,
+	pub p_type: Elf64_Word,
+	pub p_flags: Elf64_Word,
+	pub p_offset: Elf64_Off,
+	pub p_vaddr: Elf64_Addr,
+	pub p_paddr: Elf64_Addr,	// aka load
+	pub p_filesz: Elf64_Addr,
+	pub p_memsz: Elf64_Addr,
+	pub p_align: Elf64_Addr,
 }
+
+impl PhEnt {
+    pub fn start_address(&self) -> usize {
+        self.p_paddr as usize
+    }
+
+    pub fn end_address(&self) -> usize {
+        (self.p_paddr + self.p_memsz) as usize
+    }
+
+    pub fn flags(&self) -> ElfSectionFlags {
+        ElfSectionFlags::from_bits_truncate(self.p_flags.into())
+    }
+
+    pub fn is_allocated(&self) -> bool {
+        self.flags().contains(ElfSectionFlags::ELF_SECTION_ALLOCATED)
+	}
+}
+
 #[repr(C)]
 #[derive(Copy,Clone)]
 pub struct ShEnt {
-	sh_name: Elf32_Word,
-	sh_type: Elf32_Word,
-	sh_flags: Elf32_Word,
-	sh_addr: Elf32_Addr,
-	sh_offset: Elf32_Off,
-	sh_size: Elf32_Word,
-	sh_link: Elf32_Word,
-	sh_info: Elf32_Word,
-	sh_addralign: Elf32_Word,
-	sh_entsize: Elf32_Word,
+	sh_name: Elf64_Word,
+	sh_type: Elf64_Word,
+	sh_flags: Elf64_Word,
+	sh_addr: Elf64_Addr,
+	sh_offset: Elf64_Off,
+	sh_size: Elf64_Word,
+	sh_link: Elf64_Word,
+	sh_info: Elf64_Word,
+	sh_addralign: Elf64_Word,
+	sh_entsize: Elf64_Word,
 }
 
-
-pub struct ElfFile(ElfHeader);
+#[derive(Copy,Clone)]
+pub struct ElfFile(pub ElfHeader);
 impl ElfFile
 {
 	pub fn check_header(&self) {
 		self.0.check_header();
 	}
-	fn phents(&self) -> PhEntIter {
+	pub fn phents(&self) -> PhEntIter {
 		assert_eq!( self.0.e_phentsize as usize, ::core::mem::size_of::<PhEnt>() );
 		// SAFE: Assuming the file is correct...
 		let slice: &[PhEnt] = unsafe {
@@ -93,7 +114,10 @@ impl ElfFile
 		self.0.e_entry as usize
 	}
 }
-struct PhEntIter<'a>(&'a [PhEnt]);
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default)]
+pub struct PhEntIter<'a>(pub &'a [PhEnt]);
 impl<'a> Iterator for PhEntIter<'a> {
 	type Item = PhEnt;
 	fn next(&mut self) -> Option<PhEnt> {
@@ -241,4 +265,14 @@ pub extern "C" fn elf_load_symbols(file_base: &ElfFile, output: &mut SymbolInfo)
 
 	println!("- output = {:?}", output);
 	pos as u32
+}
+
+bitflags! {
+    pub struct ElfSectionFlags: u64 {
+        const ELF_SECTION_WRITABLE = 0x1;
+        const ELF_SECTION_ALLOCATED = 0x2;
+        const ELF_SECTION_EXECUTABLE = 0x4;
+        // plus environment-specific use at 0x0F000000
+        // plus processor-specific use at 0xF0000000
+    }
 }

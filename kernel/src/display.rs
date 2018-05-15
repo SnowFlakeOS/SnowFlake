@@ -1,3 +1,5 @@
+//! Some code was borrowed from [System76 Firmware Update](https://github.com/system76/firmware-update) and [Redox OS Orbital Client Library](https://github.com/redox-os/orbclient)
+
 use core::cmp;
 use color::*;
 

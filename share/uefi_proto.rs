@@ -1,5 +1,7 @@
 mod color;
+mod elf;
 use color::*;
+use elf::PhEntIter;
 
 #[repr(C)]
 pub struct Info {
@@ -8,9 +10,15 @@ pub struct Info {
 	pub cmdline_ptr: *const u8,
 	pub cmdline_len: usize,
 
+	pub elf_sections: Option<PhEntIter<'static>>,
+	pub kernel_base: usize,
+	pub kernel_size: usize,
+	pub stack_base: usize,
+	pub stack_size: usize,
+
 	pub map_addr: u64,
-	pub map_entnum: u32,
-	pub map_entsz: u32,
+	pub map_len: u32,
+	pub descriptor_size: u32,
 
 	pub video_info: *const VideoInfo,
 }

@@ -1,3 +1,5 @@
+//! Some code was borrowed from [Tifflin Bootloader](https://github.com/thepowersgang/rust_os)
+
 use uefi::boot_services::protocols;
 use uefi::boot_services::BootServices;
 use uefi::{CStr16,

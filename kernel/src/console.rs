@@ -1,3 +1,10 @@
+// =======================================================================
+//  Copyleft SnowFlakeOS Team 2018-∞.
+//  Distributed under the terms of the 3-Clause BSD License.
+//  (See accompanying file LICENSE or copy at
+//   https://opensource.org/licenses/BSD-3-Clause)
+// =======================================================================
+
 use core::fmt::{self, Write};
 use color::*;
 use display::Display;
@@ -54,7 +61,14 @@ impl Console {
         let prompt = s.clone();
 
         for c in prompt.chars() {
-            if self.x == self.w as i32 || c == '\n' { self.newline(); } else {
+            if self.y >= self.h as i32 {
+                unsafe { (*display).scroll(20, Color::rgb(0, 0, 0)) };
+                self.y -= 20;
+            }
+
+            if self.x == self.w as i32 || c == '\n' {
+                self.newline();
+            } else {
                 unsafe { (*display).char(self.x, self.y, c, color) };
                 self.x += 8;
             }
@@ -63,6 +77,6 @@ impl Console {
 
     pub fn newline(&mut self) {
         self.x = 0;
-        self.y += 14;
+        self.y += 20;
     }
 }
