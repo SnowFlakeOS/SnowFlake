@@ -1,0 +1,75 @@
+html {
+    min-height: 100vh;
+}
+
+body {
+    height: 100vh;
+    margin: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    background: url(/fakepath/path_to_default_background_image) no-repeat center center, linear-gradient(135deg, #dfaffd 0%,#4e6ffb 100%);
+    background-size: cover;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+#container {
+    width: 25vh;
+    height: 35vh;
+
+    justify-content: space-between;
+}
+
+#user-container {
+    height: 28vh;
+    align-items: center;
+    justify-content: space-between;
+
+    cursor: pointer;
+}
+
+#user-pic {
+    width: 20vh;
+    height: 20vh;
+
+    box-shadow: 0 10px 20px 0 rgba(0,0,0,.2);
+    border-radius: 30px;
+
+    background: url("../bg.jpg") no-repeat center center;
+    background-size: cover;
+}
+#user-name {
+    text-align: center;
+    font-size: 4vh;
+    color: white;
+    text-shadow: 1px 2px 4px rgba(0,0,0,.5);
+}
+
+#password {
+    /* visibility: hidden; */
+}
+#password-textbox {
+    box-sizing: border-box;
+    width: 100%;
+
+    outline: none;
+    border: 1px solid #cdcdcd;
+    border-color: rgba(0,0,0,.15);
+    background-color: rgba(0,0,0,.15);
+    font-size: 2vh;
+    color: white;
+}
+
+#password-textbox:focus {
+    background-color: rgba(0,0,0,.3);
+}
