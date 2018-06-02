@@ -38,6 +38,26 @@ Requirements to build
 - Rust (https://www.rust-lang.org)
 
 ### Windows
+#### Windows 10 or later
+Starting with Windows 10, you can use Ubuntu Bash. You can run it by typing C:\Windows\System32\bash.exe. For more information, please visit https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/
+
+You need to install Rust on Ubuntu Bash. You can install Rust using the following command.
+```
+$ curl https://sh.rustup.rs -sSf | sh
+```
+This script will download and install the rustup-init executable for your current platform.
+
+After the installation is complete, you should clone the SnowFlake repository.
+```
+$ git clone https://github.com/SnowFlake/SnowFlake.git
+```
+To build SnowFlake as an x86_64 target, x86_64-elf cross-compilation is required. If you do not have the x86_64-elf compiler, and your system is x86_64, you can use the 'x86_64-linux_env.sh' script.
+```
+$ cd SnowFlake
+$ sh x86_64-linux_env.sh
+```
+
+#### Windows 8.1 or lower
 Will be added later
 
 ### Mac
