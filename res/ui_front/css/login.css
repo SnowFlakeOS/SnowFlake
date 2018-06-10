@@ -24,7 +24,7 @@ body {
 }
 
 #container {
-    width: 25vh;
+    width: 40vh;
     height: 35vh;
 
     justify-content: space-between;
@@ -59,17 +59,19 @@ body {
     /* visibility: hidden; */
 }
 #password-textbox {
-    box-sizing: border-box;
-    width: 100%;
-
+    padding: 1vh 2vh;
+    box-shadow: 0 10px 15px 0 rgba(0,0,0,.1);
     outline: none;
+    border-radius: 30px;
     border: 1px solid #cdcdcd;
     border-color: rgba(0,0,0,.15);
-    background-color: rgba(0,0,0,.15);
+    background-color: rgba(255,255,255,.5);
     font-size: 2vh;
-    color: white;
+    letter-spacing: 1vh;
+    color: rgba(0,0,0,.5);
 }
 
 #password-textbox:focus {
-    background-color: rgba(0,0,0,.3);
+    background-color: rgba(255,255,255,.75);
+    color: black;
 }
