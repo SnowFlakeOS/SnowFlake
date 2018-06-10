@@ -1,37 +1,41 @@
-//! Some code was borrowed from [Tifflin Bootloader](https://github.com/thepowersgang/rust_os)
+// =======================================================================
+//  Copyleft SnowFlakeOS Team 2018-∞.
+//  Distributed under the terms of the 3-Clause BSD License.
+//  (See accompanying file LICENSE or copy at
+//   https://opensource.org/licenses/BSD-3-Clause)
+// =======================================================================
 
-use uefi::boot_services::protocols;
-use uefi::boot_services::BootServices;
-use uefi::{CStr16,
-           Status};
-use uefi::status::NOT_FOUND;
+use string::utf8_to_string;
+use fs::load;
+use core::mem;
+use alloc::vec::Vec;
+use alloc::string::{ToString, String};
 
-use PATH_FALLBACK_KERNEL;
-
-pub struct Configuration<'bs>
-{
-	pub kernel: ::uefi::borrow::Cow<'bs, 'static, CStr16>,
-	//commandline: ::uefi::borrow::Cow<'bs, 'static, str>,
+pub struct Conf {
+    pub kernel: String,
+    pub kernel_option: String,
+    pub boot_timeout: u64
 }
 
-impl<'bs> Configuration<'bs>
-{
-	pub fn from_file(_bs: &'bs BootServices, sys_vol: &protocols::File, filename: &CStr16) -> Result<Configuration<'bs>, Status> {
-		match sys_vol.open_read(filename) {
-		    Ok(_cfg_file) => {
-			    //panic!("TODO: Read config file (allocating strings with `bs`)");
-				Ok(Configuration {
-				    kernel: ::uefi::CStr16::from_slice(PATH_FALLBACK_KERNEL).into(),
-				    //commandline: "".into(),
-				})
-			},
-		    Err(NOT_FOUND) => {
-			    Ok(Configuration {
-				    kernel: ::uefi::CStr16::from_slice(PATH_FALLBACK_KERNEL).into(),
-				    //commandline: "".into(),
-				})
-			},
-		    Err(e) => Err(e),
-		}
-	}
-}
+pub fn load_conf() -> Conf {
+    let mut conf: Conf = unsafe { mem::zeroed() };
+    
+    if let Ok(file) = load("\\boot2snow\\boot2snow.conf") {
+        let line: Vec<String> = utf8_to_string(file).replace(" ", "").split("\n")
+            .map(|s: &str| s.to_string())
+            .collect();
+
+        for data in &line {
+            let s = data.split("=").nth(0).unwrap().to_string();
+            if s == "kernel" {
+                conf.kernel = data.split("=").nth(1).unwrap().to_string();
+            } else if s == "kernel_option" {
+                conf.kernel_option = data.split("=").nth(1).unwrap().to_string();
+            } else if s == "boot_timeout" {
+                conf.boot_timeout = data.split("=").nth(1).unwrap().to_string().parse::<u64>().unwrap();
+            }
+        }
+    }
+
+    conf
+} 

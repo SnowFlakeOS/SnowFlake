@@ -6,6 +6,10 @@ authors = ["xuserwhat <quicknshell@gmail.com>"]
 [lib]
 crate-type = ["staticlib"]
 
+[dependencies.lazy_static]
+version = "0.2.4"
+features = ["spin_no_std"]
+
 [dependencies]
 rlibc = "1.0"
 volatile = "0.1.0"

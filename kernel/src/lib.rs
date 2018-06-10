@@ -12,20 +12,21 @@
 #![feature(concat_idents)]
 #![feature(thread_local)]
 #![feature(custom_attribute)]
+#![feature(abi_x86_interrupt)]
 
 #[macro_use]
-extern crate alloc;
+extern crate lazy_static;
 
 #[macro_use]
 extern crate once;
 
 #[macro_use]
 extern crate bitflags;
+
+extern crate alloc;
 extern crate x86_64;
 extern crate spin;
 extern crate slab_allocator;
-
-use core::ptr;
 
 #[macro_use]
 mod macros;
@@ -35,6 +36,14 @@ pub mod kmain;
 mod display;
 mod console;
 mod memory;
+
+#[cfg(target_arch = "x86_64")]
+#[path="../arch/x86_64/interrupts.rs"]
+mod interrupts;
+
+/*#[cfg(target_arch = "x86_64")]
+#[path="../arch/x86_64/paging/mod.rs"]
+mod paging;*/
 
 #[path="../../share/uefi_proto.rs"]
 mod kernel_proto;
@@ -118,8 +127,21 @@ pub unsafe extern fn memmove(dest: *mut u8, src: *const u8,
     dest
 }
 
-pub const HEAP_START: usize = 0o_000_000_700_000_0000;
+pub const PML4_SIZE: usize = 0x0000_0080_0000_0000;
+pub const PML4_MASK: usize = 0x0000_ff80_0000_0000;
+
+pub const RECURSIVE_PAGE_OFFSET: usize = (-(PML4_SIZE as isize)) as usize;
+pub const RECURSIVE_PAGE_PML4: usize = (RECURSIVE_PAGE_OFFSET & PML4_MASK)/PML4_SIZE;
+
+pub const KERNEL_OFFSET: usize = 0x100000;
+
+pub const KERNEL_PERCPU_OFFSET: usize = 0xC000_0000;
+pub const KERNEL_PERCPU_SIZE: usize = 64 * 1024; // 64 KB
+
+pub const HEAP_OFFSET: usize = 0o_000_000_700_000_0000;
 pub const HEAP_SIZE: usize = 1 * 1024 * 1024; // 1 MB
+
+pub const MISC_OFFSET: usize = HEAP_OFFSET + PML4_SIZE;
 
 #[global_allocator]
 static mut ALLOCATOR: LockedHeap = LockedHeap::empty();

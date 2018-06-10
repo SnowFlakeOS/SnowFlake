@@ -8,12 +8,12 @@ git = "https://github.com/rust-lang-nursery/compiler-builtins"
 features = ["mem"]
 
 [dependencies]
-uefi = {git = "https://github.com/SnowFlakeOS/uefi", rev = "ad7346f"}
-uefi_alloc = {git = "https://github.com/SnowFlakeOS/uefi_alloc", rev = "9e75de6"}
+uefi = {git = "https://github.com/SnowFlakeOS/uefi"}
 rlibc = "1.0"
-utf16_literal = "0.1.0"
 bitflags = "1"
 x86_64 = "0.1.2"
+slab_allocator = { git = "https://github.com/redox-os/slab_allocator.git", rev = "0a53a0b" }
+orbclient = { git = "https://github.com/redox-os/orbclient.git", branch = "no_std" }
 
 [lib]
 name = "Boot2Snow"

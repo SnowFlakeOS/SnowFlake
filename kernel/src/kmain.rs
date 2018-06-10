@@ -5,16 +5,14 @@
 //   https://opensource.org/licenses/BSD-3-Clause)
 // =======================================================================
 
-use core::ops::Try;
-use core::mem;
-use core::ptr;
-
 use color::*;
 use kernel_proto::{Info, MemoryDescriptor};
 use display::Display;
 use console::{Console, set_console};
 
 use memory;
+//use paging;
+use interrupts;
 
 #[no_mangle]
 pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
@@ -23,8 +21,6 @@ pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
 
     let resolutin_w = video_info.xresolution;
     let resolutin_h = video_info.yresolution;
-    let AREA = resolutin_w * resolutin_h;
-
     let vid_addr = video_info.physbaseptr;
     let mut display = Display::new(vid_addr, resolutin_w, resolutin_h);
     let mut console = Console::new(&mut display);
@@ -36,12 +32,15 @@ pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
     
     println!("SnowKernel {}", env!("CARGO_PKG_VERSION"));
     println!("Screen resolution is {}x{}", resolutin_w, resolutin_h);
-    println!("Kernel heap start : {:#x} | size : {:#x}", ::HEAP_START, ::HEAP_SIZE);
+    println!("Kernel heap start : {:#x} | size : {:#x}", ::HEAP_OFFSET, ::HEAP_SIZE);
     println!("Kernel start : {:#x} | end : {:#x}", info.kernel_base, info.kernel_base + info.kernel_size);
 
     unsafe {
         memory::init(0, (info.kernel_base + (info.kernel_size + 4095)/4096) * 4096);
-        ::ALLOCATOR.init(::HEAP_START, ::HEAP_SIZE);
+        //let (mut active_table, tcb_offset) = paging::init(0, info.kernel_base, info.kernel_base + info.kernel_size, info.stack_base, info.stack_base + info.stack_size);
+        ::ALLOCATOR.init(::HEAP_OFFSET, ::HEAP_SIZE);
+        interrupts::init();
+        ::x86_64::instructions::interrupts::int3();
     }
 
     panic!("Test panic");

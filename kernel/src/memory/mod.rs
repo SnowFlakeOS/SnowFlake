@@ -161,7 +161,7 @@ pub fn deallocate_frames(frame: Frame, count: usize) {
 /// Do not add more derives, or make anything `pub`!
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Frame {
-    number: usize
+    pub number: usize
 }
 
 impl Frame {
