@@ -26,6 +26,7 @@ use uefi::{SimpleInputInterface,
         	Handle,
 			SystemTable,
 			Status};
+use uefi::boot_services::protocols::{GraphicsOutput, ModeInformation, PixelFormat};
 
 #[macro_use]
 extern crate bitflags;
@@ -34,7 +35,7 @@ extern crate bitflags;
 extern crate alloc;
 extern crate uefi;
 extern crate x86_64;
-extern crate slab_allocator;
+extern crate uefi_alloc;
 extern crate orbclient;
 
 #[macro_use]
@@ -61,8 +62,6 @@ mod kernel_proto;
 #[path="../../share/color.rs"]
 mod color;
 
-use slab_allocator::LockedHeap;
-
 // Globals used for panic handling and loging
 static mut S_CONIN: *mut SimpleInputInterface = 1 as *mut _;
 static mut S_CONOUT: *const SimpleTextOutputInterface = 1 as *const _;
@@ -72,11 +71,8 @@ static mut S_IMAGE_HANDLE: Handle = 0 as *mut _;
 
 pub type EntryPoint = extern "C" fn(usize, *const kernel_proto::Info) -> !;
 
-pub const HEAP_OFFSET: usize = 0o_000_000_070_000_0000;
-pub const HEAP_SIZE: usize = 50 * 1024 * 1024;
-
 #[global_allocator]
-static mut ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: uefi_alloc::Allocator = uefi_alloc::Allocator;
 
 pub fn get_conin() -> &'static mut SimpleInputInterface {
 	unsafe { &mut *S_CONIN }
@@ -98,17 +94,22 @@ pub fn get_runtime_services() -> &'static RuntimeServices {
 	unsafe { &*S_RUNTIME_SERVICES }
 }
 
-fn set_text_mode(output: &SimpleTextOutputInterface) -> Result<(), ()> {
+fn set_graphics_mode(output: &GraphicsOutput) -> Result<(), ()> {
     let mut max_i = None;
     let mut max_w = 0;
     let mut max_h = 0;
 
     for i in 0..output.mode.max_mode as usize {
-        let mut w = 0;
-        let mut h = 0;
-        if output.query_mode(i, &mut w, &mut h).into_result().is_ok() {
-            if w >= max_w && h >= max_h {
-                max_i = Some(i);
+        let mut mode_ptr: *mut ModeInformation = ::core::ptr::null_mut();
+		let mut mode_size = 0;
+        if (output.query_mode)(output, i as u32, &mut mode_size, &mut (mode_ptr as *const ModeInformation)).into_result().is_ok() {
+			let mode = unsafe { &mut *mode_ptr };
+
+			let w = mode.horizontal_resolution;
+			let h = mode.vertical_resolution;
+			let pixel_format = mode.pixel_format;
+            if w >= max_w && h >= max_h && pixel_format == PixelFormat::BGRX {
+                max_i = Some(i as u32);
                 max_w = w;
                 max_h = h;
             }
@@ -116,10 +117,10 @@ fn set_text_mode(output: &SimpleTextOutputInterface) -> Result<(), ()> {
     }
 
     if let Some(i) = max_i {
-        let _ = output.set_mode(i);
+        output.set_mode(i);
     }
 
-    Ok(())
+	Ok(())
 }
 
 #[no_mangle]
@@ -135,13 +136,18 @@ pub extern "win64" fn _start(image_handle: Handle, system_table: &SystemTable) -
 		S_BOOT_SERVICES = system_table.boot_services;
         S_RUNTIME_SERVICES = system_table.runtime_services;
 
-		::ALLOCATOR.init(::HEAP_OFFSET, ::HEAP_SIZE);
+		uefi_alloc::init(get_boot_services());
 	}
 
+	let gop = GraphicsOutput::new(get_boot_services()).unwrap();
+
 	{
-		if let Err(err) = set_text_mode(system_table.con_out).into_result() {
-        	println!("Sorry, set_text_mode() Failed :( {:?}", err); 
+    	if let Err(err) = set_graphics_mode(gop).into_result() {
+        	println!("Sorry, set_graphics_mode() Failed :( {:?}", err);
+        	loop {};
     	}
+
+		let _ = conout.set_attribute(0x0F);
 
     	if let Err(err) = boot2snow::init().into_result() {
         	println!("Sorry, boot2snow::init() Failed :( {:?}", err);

@@ -27,6 +27,7 @@ extern crate alloc;
 extern crate x86_64;
 extern crate spin;
 extern crate slab_allocator;
+extern crate orbclient;
 
 #[macro_use]
 mod macros;

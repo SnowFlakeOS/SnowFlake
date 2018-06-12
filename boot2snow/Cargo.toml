@@ -12,7 +12,7 @@ uefi = {git = "https://github.com/SnowFlakeOS/uefi"}
 rlibc = "1.0"
 bitflags = "1"
 x86_64 = "0.1.2"
-slab_allocator = { git = "https://github.com/redox-os/slab_allocator.git", rev = "0a53a0b" }
+uefi_alloc = { git = "https://github.com/SnowFlakeOS/uefi_alloc" }
 orbclient = { git = "https://github.com/redox-os/orbclient.git", branch = "no_std" }
 
 [lib]

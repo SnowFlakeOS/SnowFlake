@@ -18,3 +18,4 @@ x86_64 = "0.1.2"
 bitflags = "1"
 once = "0.3.3"
 slab_allocator = { git = "https://github.com/redox-os/slab_allocator.git", rev = "0a53a0b" }
+orbclient = { git = "https://github.com/redox-os/orbclient.git", branch = "no_std" }

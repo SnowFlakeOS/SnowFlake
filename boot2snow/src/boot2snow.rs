@@ -44,20 +44,6 @@ pub extern fn init() -> Result<(), ()> {
 	{
     	let (mut display, vid_addr) = {
         	let output = Output::one().unwrap();
-
-        	let mut mode: u32 = 0;
-
-    		for i in 0..output.0.mode.max_mode {
-        		let info = output.0.query_mode(i).unwrap();
-
-        		if info.pixel_format != PixelFormat::RGBX
-            	&& info.pixel_format != PixelFormat::BGRX { continue; }
-        		if info.horizontal_resolution > 1920 && info.vertical_resolution > 1080 { continue; }
-        		if info.horizontal_resolution == 1920 && info.vertical_resolution == 1080 { mode = i; break; }
-        		mode = i;
-    		};
-
-        	let _ = output.0.set_mode(mode);
     	    let vid_addr = output.0.mode.frame_buffer_base;
 
         	(Display::new(output), vid_addr)

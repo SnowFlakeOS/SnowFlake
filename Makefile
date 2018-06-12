@@ -19,7 +19,7 @@ clean:
 	@rm -r build #target
 
 run: $(img)
-	@qemu-system-x86_64 -m 1024 -serial mon:stdio -net none -vga std -bios ovmf.fd $(img)
+	@qemu-system-x86_64 -m 4096 -serial mon:stdio -net none -vga std -bios ovmf.fd $(img)
 
 run-debug: $(img)
 	@qemu-system-x86_64 -s -S -m 1024 -serial mon:stdio -net none -vga std -bios ovmf.fd $(img)
