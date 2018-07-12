@@ -5,33 +5,33 @@
 //   https://opensource.org/licenses/BSD-3-Clause)
 // =======================================================================
 
-use color::*;
+use x86_64::instructions::interrupts::enable;
+
 use kernel_proto::{Info, MemoryDescriptor};
 use display::Display;
-use console::{Console, set_console};
+use color::*;
 
+use arch;
 use memory;
-//use paging;
-use interrupts;
+use shell;
 
 #[no_mangle]
 pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
     let info = unsafe { &*boot_info };
     let video_info = unsafe { &*(*info).video_info };
 
-    let resolutin_w = video_info.xresolution;
-    let resolutin_h = video_info.yresolution;
+    let resolution_w = video_info.xresolution;
+    let resolution_h = video_info.yresolution;
     let vid_addr = video_info.physbaseptr;
-    let mut display = Display::new(vid_addr, resolutin_w, resolutin_h);
-    let mut console = Console::new(&mut display);
     let elf_sections = info.elf_sections;
 
-    set_console(&mut console);
-    
-    display.rect(0, 0, resolutin_w, resolutin_h, Color::rgb(0, 0, 0));
-    
+    unsafe { 
+        //enable();
+        ::KERNEL_BASE = info.kernel_base;
+    }
+
     println!("SnowKernel {}", env!("CARGO_PKG_VERSION"));
-    println!("Screen resolution is {}x{}", resolutin_w, resolutin_h);
+    println!("Screen resolution is {}x{}", resolution_w, resolution_h);
     println!("Kernel heap start : {:#x} | size : {:#x}", ::HEAP_OFFSET, ::HEAP_SIZE);
     println!("Kernel start : {:#x} | end : {:#x}", info.kernel_base, info.kernel_base + info.kernel_size);
 
@@ -39,9 +39,38 @@ pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
         memory::init(0, (info.kernel_base + (info.kernel_size + 4095)/4096) * 4096);
         //let (mut active_table, tcb_offset) = paging::init(0, info.kernel_base, info.kernel_base + info.kernel_size, info.stack_base, info.stack_base + info.stack_size);
         ::ALLOCATOR.init(::HEAP_OFFSET, ::HEAP_SIZE);
-        interrupts::init();
-        ::x86_64::instructions::interrupts::int3();
+        arch::init();
+        asm!("int3");
+    }
+    
+    let mut display = Display::new(vid_addr as *mut Color, resolution_w, resolution_h);
+
+    {
+        let (w, h) = { (resolution_w / 3, 8) };
+        let (x, y) = { (video_info.splashx - w as i32 / 2, video_info.splashy) };
+        display.rect(x, y, w, 100, Color::rgb(0, 0, 0));
+        display.rounded_rect(x, y, w, h, 2, false, Color::rgb(255, 255, 255));
+
+        progress_bar(&mut display, x, y, resolution_w, 50);
     }
 
+    shell::execute();
+
     panic!("Test panic");
+}
+
+fn progress_bar(display: &mut Display, x: i32, y: i32, resolution_w: u32, progress: u32) {
+    let (w, h) = { ((resolution_w / 3) / 100 as u32, 8) };
+    let progress = (progress as f32 * 1.35) as u32;
+    let (p1, p2) = { (progress - 1, progress - 2) };
+    
+    for i in 0..progress {
+        if i == 0 {
+            display.rounded_rect(x, y, w + 4, h, 2, true, Color::rgb(255, 255, 255));
+        } else if i == p2 { } else if i == p1 {
+            display.rounded_rect(x + (p2 * w) as i32, y, w * 2, h, 2, true, Color::rgb(255, 255, 255));
+        } else {
+            display.rect(x + (i * w) as i32, y, (w as f32 * 1.5) as u32, h, Color::rgb(255, 255, 255));
+        }
+    }
 }

@@ -95,9 +95,11 @@ pub extern fn init() -> Result<(), ()> {
         }
 
 		let video_info = kernel_proto::VideoInfo {
-			physbaseptr: vid_addr as *mut Color,
+			physbaseptr: vid_addr,
 			xresolution: display.width(),
-			yresolution: display.height()
+			yresolution: display.height(),
+			splashx: display.width() as i32 / 2,
+			splashy: (display.height() as i32 + splash.height() as i32) / 2
 		};
 
 		let boot_info = kernel_proto::Info {
@@ -121,7 +123,10 @@ pub extern fn init() -> Result<(), ()> {
 		};
 		
 		// - Execute kernel (passing a magic value and general boot information)
-		unsafe { asm!("mov rsp, $0" : : "r"(STACK_BASE + STACK_SIZE) : "memory" : "intel", "volatile") };
+		unsafe { 
+			asm!("mov rsp, $0" : : "r"(STACK_BASE + STACK_SIZE) : "memory" : "intel", "volatile");
+		}
+
 		entrypoint(0x71FF0EF1, &boot_info);
     }
 
@@ -194,11 +199,6 @@ fn load_kernel_file(filename: &str) -> Result<EntryPoint, Status> {
 		kernel_file.read( unsafe { slice::from_raw_parts_mut( &mut ent as *mut _ as *mut u8, mem::size_of::<elf::PhEnt>() ) } ).expect("PhEnt read");
 		
 		if ent.p_type == 1 {
-			println!("- {:#x}+{:#x} loads +{:#x}+{:#x}",
-				ent.p_paddr, ent.p_memsz,
-				ent.p_offset, ent.p_filesz
-				);
-
 			unsafe {
 				KERNEL_BASE = ent.p_vaddr as usize;
 				KERNEL_SIZE = ent.p_memsz as usize;

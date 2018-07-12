@@ -17,8 +17,8 @@ impl Display {
         Self {
             output,
             scale,
-            w,
-            h,
+            w: w * scale,
+            h: h * scale,
             font: include_bytes!("../../res/unifont.font")
         }
     }
@@ -86,24 +86,76 @@ impl Display {
         }
     }
 
-    fn inner_scroll(&mut self, rows: usize, color: Color) {
-        let width = self.w as usize;
-        let height = self.h as usize;
-        if rows > 0 && rows < height {
-            let off1 = rows * width;
-            let off2 = height * width - off1;
-            unsafe {
-                let output_ptr = self.output as *mut u32;
-                fast_copy(output_ptr as *mut u8, output_ptr.offset(off1 as isize) as *const u8, off2 as usize * 4);
-                fast_set32(output_ptr.offset(off2 as isize), color.0, off1 as usize);
+    /// Draw a piece of an arc. Negative radius will fill in the inside
+    pub fn arc(&mut self, x0: i32, y0: i32, radius: i32, parts: u8, color: Color) {
+        let mut x = radius.abs();
+        let mut y = 0;
+        let mut err = 0;
+
+        while x >= y {
+            if radius < 0 {
+                if parts & 1 << 0 != 0 { self.rect(x0 - x, y0 + y, x as u32, 1, color); }
+                if parts & 1 << 1 != 0 { self.rect(x0, y0 + y, x as u32 + 1, 1, color); }
+                if parts & 1 << 2 != 0 { self.rect(x0 - y, y0 + x, y as u32, 1, color); }
+                if parts & 1 << 3 != 0 { self.rect(x0, y0 + x, y as u32 + 1, 1, color); }
+                if parts & 1 << 4 != 0 { self.rect(x0 - x, y0 - y, x as u32, 1, color); }
+                if parts & 1 << 5 != 0 { self.rect(x0, y0 - y, x as u32 + 1, 1, color); }
+                if parts & 1 << 6 != 0 { self.rect(x0 - y, y0 - x, y as u32, 1, color); }
+                if parts & 1 << 7 != 0 { self.rect(x0, y0 - x, y as u32 + 1, 1, color); }
+            } else if radius == 0 {
+                self.pixel(x0, y0, color);
+            } else {
+                if parts & 1 << 0 != 0 { self.pixel(x0 - x, y0 + y, color); }
+                if parts & 1 << 1 != 0 { self.pixel(x0 + x, y0 + y, color); }
+                if parts & 1 << 2 != 0 { self.pixel(x0 - y, y0 + x, color); }
+                if parts & 1 << 3 != 0 { self.pixel(x0 + y, y0 + x, color); }
+                if parts & 1 << 4 != 0 { self.pixel(x0 - x, y0 - y, color); }
+                if parts & 1 << 5 != 0 { self.pixel(x0 + x, y0 - y, color); }
+                if parts & 1 << 6 != 0 { self.pixel(x0 - y, y0 - x, color); }
+                if parts & 1 << 7 != 0 { self.pixel(x0 + y, y0 - x, color); }
+            }
+
+            y += 1;
+            err += 1 + 2*y;
+            if 2*(err-x) + 1 > 0 {
+                x -= 1;
+                err += 1 - 2*x;
             }
         }
     }
 
-    fn inner_pixel(&mut self, x: i32, y: i32, color: Color) {
-        let w = self.w;
-        unsafe { *self.output.offset((w as isize * y as isize) + x as isize) = color };
+    pub fn rounded_rect(&mut self, x: i32, y: i32, w: u32, h: u32, radius: u32, filled: bool, color: Color) {
+        let w = w as i32;
+        let h = h as i32;
+        let r = radius as i32;
+
+
+        if filled {
+            //Draw inside corners
+            self.arc(x + r, y + r, -r, 1 << 4 | 1 << 6, color);
+            self.arc(x + w - 1 - r, y + r, -r, 1 << 5 | 1 << 7, color);
+            self.arc(x + r, y + h - 1 - r,- r, 1 << 0 | 1 << 2, color);
+            self.arc(x + w - 1 - r, y + h - 1 - r, -r, 1 << 1 | 1 << 3, color);
+
+            // Draw inside rectangles
+            self.rect(x + r, y, (w - 1 - r * 2) as u32, r as u32 + 1, color);
+            self.rect(x + r, y + h - 1 - r, (w - 1 - r * 2) as u32, r as u32 + 1, color);
+            self.rect(x, y + r + 1, w as u32, (h - 2 - r * 2) as u32, color);
+        } else {
+            //Draw outside corners
+            self.arc(x + r, y + r, r, 1 << 4 | 1 << 6, color);
+            self.arc(x + w - 1 - r, y + r, r, 1 << 5 | 1 << 7, color);
+            self.arc(x + r, y + h - 1 - r, r, 1 << 0 | 1 << 2, color);
+            self.arc(x + w - 1 - r, y + h - 1 - r, r, 1 << 1 | 1 << 3, color);
+
+            // Draw outside rectangles
+            self.rect(x + r + 1, y, (w - 2 - r * 2) as u32, 1, color);
+            self.rect(x + r + 1, y + h - 1, (w - 2 - r * 2) as u32, 1, color);
+            self.rect(x, y + r + 1, 1, (h - 2 - r * 2) as u32, color);
+            self.rect(x + w - 1, y + r + 1, 1, (h - 2 - r * 2) as u32, color);
+        }
     }
+
 
     fn inner_rect(&mut self, x: i32, y: i32, w: u32, h: u32, color: Color) {
         let self_w = self.w;
@@ -131,6 +183,25 @@ impl Display {
                 }
             }
         }
+    }
+
+    fn inner_scroll(&mut self, rows: usize, color: Color) {
+        let width = self.w as usize;
+        let height = self.h as usize;
+        if rows > 0 && rows < height {
+            let off1 = rows * width;
+            let off2 = height * width - off1;
+            unsafe {
+                let output_ptr = self.output as *mut u32;
+                fast_copy(output_ptr as *mut u8, output_ptr.offset(off1 as isize) as *const u8, off2 as usize * 4);
+                fast_set32(output_ptr.offset(off2 as isize), color.0, off1 as usize);
+            }
+        }
+    }
+
+    fn inner_pixel(&mut self, x: i32, y: i32, color: Color) {
+        let w = self.w;
+        unsafe { *self.output.offset((w as isize * y as isize) + x as isize) = color };
     }
 
     /// Draw a line

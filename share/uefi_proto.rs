@@ -25,9 +25,11 @@ pub struct Info {
 
 #[repr(C)]
 pub struct VideoInfo {
-	pub physbaseptr: *mut Color,
+	pub physbaseptr: u64,
 	pub xresolution: u32,
-	pub yresolution: u32
+	pub yresolution: u32,
+	pub splashx: i32,
+	pub splashy: i32
 }
 
 // TODO: Grab this from libuefi

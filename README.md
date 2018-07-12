@@ -9,9 +9,9 @@
 Technology is free, SnowFlakeOS
 
 ## Library used
-- utf16_literal (https://github.com/thepowersgang/rust_os/tree/master/Bootloaders/libuefi/utf16_literal)
 - uefi (forked, https://github.com/thepowersgang/rust_os/tree/master/Bootloaders/libuefi)
 - slab_allocator (https://github.com/redox-os/slab_allocator)
+- x86_64 (forked, https://github.com/rust-osdev/x86_64)
 
 ## TODO
 ### Boot2Snow (x86_64, UEFI)
