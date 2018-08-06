@@ -14,6 +14,7 @@ use color::*;
 use arch;
 use memory;
 use shell;
+use testui;
 
 #[no_mangle]
 pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
@@ -54,7 +55,7 @@ pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
         progress_bar(&mut display, x, y, resolution_w, 50);
     }
 
-    shell::execute();
+    shell::execute(&mut display);
 
     panic!("Test panic");
 }

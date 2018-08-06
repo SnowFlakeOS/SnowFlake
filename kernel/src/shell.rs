@@ -6,8 +6,10 @@
 // =======================================================================
 
 use arch::keyboard;
+use display::Display;
+use testui;
 
-pub fn execute() {
+pub fn execute(display: &mut Display) {
     println!("Starting Snowflake Minimal Shell... (Debug)");
     print!("///// Welcome to Snowflake Minimal Shell /////");
 
@@ -26,6 +28,9 @@ pub fn execute() {
                 println!("Exiting Shell... (Debug)");
                 break
             },
+            "start" => {
+                testui::uidraw(display);
+            }
             _ => {
                 print!("Unknown command :(");
             }

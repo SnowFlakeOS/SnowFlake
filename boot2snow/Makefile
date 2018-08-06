@@ -9,7 +9,7 @@ LD = $(PREFIX)/bin/$(arch)-efi-pe-ld
 CARGO = xargo
 CARGOFLAGS = --target $(target_arch) --release -- -C soft-float
 
-BINUTILS = 2.30
+BINUTILS = 2.31
 
 boot2snow = $(BUILD_DIR)/bootx64.efi
 boot2snow_obj = $(BUILD_DIR)/target/$(target_arch)/release/libBoot2Snow.a
@@ -52,7 +52,7 @@ $(boot2snow_obj):
 
 $(PREFIX)/binutils-$(BINUTILS).tar.gz:
 	@mkdir -p $(shell dirname $@)
-	@curl -o $@ https://ftp.gnu.org/gnu/binutils/binutils-$(BINUTILS).tar.gz
+	@curl -o $@ https://mirror.jre655.com/GNU/binutils/binutils-$(BINUTILS).tar.gz
 
 $(LD): $(PREFIX)/binutils-$(BINUTILS).tar.gz
 	@tar -zxvf $< -C $(PREFIX)

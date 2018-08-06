@@ -44,6 +44,7 @@ mod console;
 mod memory;
 mod shell;
 mod consts;
+mod testui;
 
 #[cfg(target_arch = "x86_64")]
 #[path="../arch/x86_64/mod.rs"]
