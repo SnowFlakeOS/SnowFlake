@@ -52,7 +52,7 @@ pub extern "C" fn kmain(magic: usize, boot_info: *const Info) -> ! {
         display.rect(x, y, w, 100, Color::rgb(0, 0, 0));
         display.rounded_rect(x, y, w, h, 2, false, Color::rgb(255, 255, 255));
 
-        progress_bar(&mut display, x, y, resolution_w, 50);
+        progress_bar(&mut display, x, y, resolution_w, 100);
     }
 
     shell::execute(&mut display);
