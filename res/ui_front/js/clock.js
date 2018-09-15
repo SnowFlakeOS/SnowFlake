@@ -13,6 +13,11 @@
 		hour = hour - 12;
 	}
 
+	else if (hour == 0) {
+		AMPM = "오전";
+		hour = hour + 12;
+	}
+
 	else if (hour == 12) {
 		AMPM = "오후";
 	}
@@ -23,7 +28,8 @@
 
 	minute = checkTime(minute);
 	second = checkTime(second);
-	
+	month = checkTime(month);
+
 	document.getElementById('clock').innerHTML = AMPM + " " + hour + ":" + minute;
 	document.getElementById('date').innerHTML = year + "-" + month + "-" + date;
 	var t = setTimeout(startTime, 500);

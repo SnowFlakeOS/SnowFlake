@@ -1,0 +1,31 @@
+#context-menu {
+  list-style: none;
+  margin: 0px;
+  margin-top: 4px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 3px;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+#rc-menu {
+  display: none;
+  position: fixed;
+  border: 1px solid green;
+  width: 200px;
+  background: #616161;
+  box-shadow: 3px 3px 2px #E9E9E9;
+  border-radius: 4px;
+}
+
+li {
+  padding; 3px;
+  padding-left: 10px;
+}
+
+#context-menu :hover {
+  color: white;
+  background: #9E9E9E;
+  border-radius: 2px;
+}
