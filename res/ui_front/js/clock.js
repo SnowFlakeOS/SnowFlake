@@ -9,21 +9,21 @@
 	var second = today.getSeconds();
 
 	if (hour > 12) {
-		AMPM = "오후";
+		AMPM = "PM";
 		hour = hour - 12;
 	}
 
 	else if (hour == 0) {
-		AMPM = "오전";
+		AMPM = "AM";
 		hour = hour + 12;
 	}
 
 	else if (hour == 12) {
-		AMPM = "오후";
+		AMPM = "PM";
 	}
 
 	else {
-		AMPM = "오전";
+		AMPM = "AM";
 	}
 
 	minute = checkTime(minute);
